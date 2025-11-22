@@ -30,8 +30,14 @@ public class StudentService {
 
 public List<Course> browseAvailableCourses() {
     
-    return new ArrayList<>(dbManager.getAllCourses());
-}
+  List<Course> approvedCourses = new ArrayList<>(); //lab 8
+        for (Course course : dbManager.getAllCourses()) {
+            if (course.getStatus() == Course.CourseStatus.APPROVED) {
+                approvedCourses.add(course);
+            }
+        }
+        return approvedCourses;}
+  
 
 public boolean enrollInCourse(String courseId) {
     
@@ -43,6 +49,9 @@ public boolean enrollInCourse(String courseId) {
     if (course == null) {
         return false;
     }
+    if (course == null || course.getStatus() != Course.CourseStatus.APPROVED) {
+            return false;
+        } //lab 8
     
     currentStudent.enrollInCourse(courseId);
     course.addStudent(currentStudent.getUserId());
