@@ -4,6 +4,7 @@
  */
 package databse;
 
+import BackEnd.Admin;
 import BackEnd.Course;
 import BackEnd.Instructor;
 import BackEnd.Lesson;
@@ -49,10 +50,12 @@ public class JsonDatabaseManager {
 
     public JsonDatabaseManager() {
 
-        RuntimeTypeAdapterFactory<User> adapter = RuntimeTypeAdapterFactory
-                .of(User.class, "role", true) // ADD 'true' here
+       RuntimeTypeAdapterFactory<User> adapter = RuntimeTypeAdapterFactory
+                .of(User.class, "role")
                 .registerSubtype(Student.class, "Student")
-                .registerSubtype(Instructor.class, "Instructor");
+                .registerSubtype(Instructor.class, "Instructor")
+                .registerSubtype(Admin.class, "Admin");//lab 8
+        
 
         this.gson = new GsonBuilder()
                 .registerTypeAdapterFactory(adapter)
