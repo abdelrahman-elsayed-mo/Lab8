@@ -21,10 +21,14 @@ public class StudentService {
 
     public StudentService(JsonDatabaseManager dbManager, User currentUser) {
         this.dbManager = dbManager;
-        if (currentUser instanceof Student student) {
-            this.currentStudent = student;
+            if (!"Student".equals(currentUser.getRole())) {
+            throw new IllegalArgumentException("User must have Student role");
+        }
+        
+        if (currentUser instanceof Student) {
+            this.currentStudent = (Student) currentUser;
         } else {
-            throw new IllegalArgumentException("User must be a Student");
+            throw new IllegalArgumentException("User must be a Student instance");
         }
     }
 

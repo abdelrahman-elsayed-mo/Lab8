@@ -63,7 +63,7 @@ public class SignupFrame extends JFrame {
         gbc.gridy++;
         panel.add(new JLabel("Role:"), gbc);
         gbc.gridx = 1;
-        cmbRole = new JComboBox<>(new String[]{"Student", "Instructor"});
+        cmbRole = new JComboBox<>(new String[]{"Student", "Instructor","Admin"});
         panel.add(cmbRole, gbc);
 
         gbc.gridx = 0;

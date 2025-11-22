@@ -263,7 +263,7 @@ public class JsonDatabaseManager {
 
     private List<QuizAttempt> loadQuizAttempts() {
         try (FileReader read = new FileReader(QUIZ_ATTEMPTS_FILE)) {
-            Type T = new TypeToken<List<Quiz>>() {
+            Type T = new TypeToken<List<QuizAttempt>>() {
             }.getType();
             List<QuizAttempt> QuizAttempts = gson.fromJson(read, T);
             if (QuizAttempts != null) {

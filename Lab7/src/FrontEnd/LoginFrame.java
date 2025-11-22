@@ -110,8 +110,14 @@ public class LoginFrame extends JFrame {
                 new StudentDashboard(db, loggedInUser.getUserId()).setVisible(true);
             } 
             else if (loggedInUser.getRole().equalsIgnoreCase("Instructor")) {
-                JsonDatabaseManager db = new JsonDatabaseManager(); // Added for consistency
+                JsonDatabaseManager db = new JsonDatabaseManager(); 
                 new InstructorDashboard(db, loggedInUser.getUserId()).setVisible(true);
+            }
+             else if (loggedInUser.getRole().equalsIgnoreCase("Admin")) {
+                JsonDatabaseManager db = new JsonDatabaseManager();
+                Admin admin = (Admin) loggedInUser;
+                AdminService adminService = new AdminService(db);
+                new AdminDashboard(admin, adminService).setVisible(true);
             }
         } else {
             lblError.setText("Invalid email or password.");

@@ -16,6 +16,10 @@ public class Instructor extends User {
         super(userId, "Instructor", username, email, passwordHash);
         this.createdCourses = new ArrayList<>();
     }
+        public Instructor() {
+        super("", "Instructor", "", "", "");
+        this.createdCourses = new ArrayList<>();
+    }
 
     public List<String> getCreatedCourses() {
         return createdCourses;

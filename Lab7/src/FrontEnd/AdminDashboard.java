@@ -11,6 +11,8 @@ package FrontEnd;
 import BackEnd.Admin;
 import BackEnd.Course;
 import Services.AdminService;
+import Services.UserService;
+import databse.JsonDatabaseManager;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
@@ -85,7 +87,7 @@ public class AdminDashboard extends JFrame {
                     return;
                 }
                 Course c = pendingCourses.get(index);
-                boolean success = service.approve(c.getCourseId());
+                boolean success = service.approveCourse(c.getCourseId());
 
                 if (success) {
                     JOptionPane.showMessageDialog(null, "Course Approved!");
@@ -106,7 +108,7 @@ public class AdminDashboard extends JFrame {
                 }
 
                 Course c = pendingCourses.get(index);
-                boolean success = service.reject(c.getCourseId());
+                boolean success = service.rejectCourse(c.getCourseId());
 
                 if (success) {
                     JOptionPane.showMessageDialog(null, "Course Rejected.");
@@ -120,7 +122,15 @@ public class AdminDashboard extends JFrame {
         btnLogout.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose();
+                 int confirm = JOptionPane.showConfirmDialog(AdminDashboard.this,
+                "Are you sure you want to logout?", "Confirm Logout",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            JsonDatabaseManager dbManager = new JsonDatabaseManager();
+            new LoginFrame(new UserService(dbManager)).setVisible(true);
+            dispose();
+        }
                
             }
         });
@@ -128,7 +138,7 @@ public class AdminDashboard extends JFrame {
 
     private void refreshList() {
         listModel.clear();
-        pendingCourses = service.getPending();
+        pendingCourses = service.getPendingCourses();
 
         if (pendingCourses.isEmpty()) {
             listModel.addElement("No pending courses found.");

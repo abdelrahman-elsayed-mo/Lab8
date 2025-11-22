@@ -20,7 +20,11 @@ public class Student extends User {
         this.enrolledCourses = new ArrayList<>();
         this.progress = new HashMap<>();
     }
-
+        public Student() {
+        super("", "Student", "", "", ""); // GSON will override these
+        this.enrolledCourses = new ArrayList<>();
+        this.progress = new HashMap<>();
+    }
   
 
     public List<String> getEnrolledCourses() {

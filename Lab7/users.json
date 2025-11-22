@@ -1,144 +1,35 @@
 {
-  "U104181": {
-    "createdCourses": [],
-    "userId": "U104181",
-    "role": "Instructor",
-    "username": "osama mohammed",
-    "email": "osama@gmail.com",
-    "passwordHash": "a163ed4c15346b9df1c2de41bd032b7db13c965172b7ee4f047d7bf20d4e7e17"
-  },
-  "U43546": {
-    "createdCourses": [
-      "C92080"
-    ],
-    "userId": "U43546",
-    "role": "Instructor",
-    "username": "abdelrahman elsayed",
-    "email": "abdelrahman@gmail.com",
-    "passwordHash": "00486161b2b81466326f14bed355c30cdb11aab60fc94240be53c378e38780f1"
-  },
-  "U41691": {
+  "U91125": {
     "enrolledCourses": [
-      "C92080"
+      "C37218"
     ],
     "progress": {
-      "C92080": [
-        "L84545"
+      "C37218": [
+        "L57824"
       ]
     },
-    "userId": "U41691",
+    "userId": "U91125",
     "role": "Student",
-    "username": "osama mohammed m",
-    "email": "m@gmail.com",
-    "passwordHash": "7d38852ae00d6bc23def586df1f3de8a22ec7d09cd5f32aea01cfe9c1140a2db"
-  },
-  "U98499": {
-    "enrolledCourses": [
-      "C64288"
-    ],
-    "progress": {
-      "C64288": [
-        "L32934",
-        "L27258"
-      ]
-    },
-    "userId": "U98499",
-    "role": "Student",
-    "username": "elganagy",
-    "email": "elganagy@gmail.com",
-    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
-  },
-  "U31638": {
-    "enrolledCourses": [],
-    "progress": {},
-    "userId": "U31638",
-    "role": "Student",
-    "username": "adam ayman",
-    "email": "adam@gmail.com",
-    "passwordHash": "dd130a849d7b29e5541b05d2f7f86a4acd4f1ec598c1c9438783f56bc4f0ff80"
-  },
-  "U104798": {
-    "enrolledCourses": [
-      "C80126",
-      "C64288",
-      "C66763",
-      "C92080"
-    ],
-    "progress": {
-      "C80126": [
-        "L24330",
-        "L58995",
-        "L11822"
-      ],
-      "C64288": [
-        "L18206",
-        "L27258"
-      ],
-      "C66763": [
-        "L11461",
-        "L104231",
-        "L98216"
-      ],
-      "C92080": [
-        "L84545"
-      ]
-    },
-    "userId": "U104798",
-    "role": "Student",
-    "username": "abdo elayed",
+    "username": "abdo elsayed",
     "email": "abdo@gmail.com",
-    "passwordHash": "00486161b2b81466326f14bed355c30cdb11aab60fc94240be53c378e38780f1"
+    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
   },
-  "U106245": {
+  "U81712": {
+    "userId": "U81712",
+    "role": "Admin",
+    "username": "moaz elsayed",
+    "email": "moaz@gmail.com",
+    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+  },
+  "U24315": {
     "createdCourses": [
-      "C64288",
-      "C80126",
-      "C66763"
+      "C37218",
+      "C11876"
     ],
-    "userId": "U106245",
+    "userId": "U24315",
     "role": "Instructor",
-    "username": "Ahmed Elsayed",
+    "username": "ahmed elsayed",
     "email": "ahmed@gmail.com",
-    "passwordHash": "3031c107dbc36646b0bd87c840a2f448e6a9aece22df25dd7cd3edbd02500883"
-  },
-  "U92468": {
-    "createdCourses": [],
-    "userId": "U92468",
-    "role": "Instructor",
-    "username": "mahmoud haitham",
-    "email": "mahmoud@gmail.com",
-    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
-  },
-  "U11792": {
-    "createdCourses": [],
-    "userId": "U11792",
-    "role": "Instructor",
-    "username": "instructor1",
-    "email": "instructor@gmail.com",
-    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
-  },
-  "U104599": {
-    "enrolledCourses": [
-      "C66763",
-      "C64288",
-      "C80126"
-    ],
-    "progress": {
-      "C66763": [
-        "L98216",
-        "L11461",
-        "L104231"
-      ],
-      "C64288": [
-        "L27258",
-        "L18206"
-      ],
-      "C80126": []
-    },
-    "userId": "U104599",
-    "role": "Student",
-    "username": "student",
-    "email": "student@gmail.com",
     "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
   }
 }
