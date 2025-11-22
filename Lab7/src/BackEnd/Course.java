@@ -11,14 +11,20 @@ import java.util.UUID;
 
 
 public class Course {
+    
+    public enum CourseStatus { //lab 8
+        PENDING,
+        APPROVED,
+        REJECTED
+    }
 
     private String courseId;
     private String title;
     private String description;
     private String instructorId;
     private List<Lesson> lessons;
-
     private List<String> students;
+    private CourseStatus status; //lab 8
 
     public Course(String title, String description, String instructorId) {
         this.courseId = new IdGenerator().generateCourseId();
@@ -26,9 +32,17 @@ public class Course {
         this.description = description;
         this.instructorId = instructorId;
         this.lessons = new ArrayList<>();
-       
         this.students = new ArrayList<>();
+        this.status = CourseStatus.PENDING; //lab 8
     }
+    
+    public CourseStatus getStatus() { //lab 8
+        return status;
+    }
+    public void setStatus(CourseStatus status) { //lab 8
+        this.status = status;
+    }
+    
 
     public String getCourseId() {
         return courseId;
