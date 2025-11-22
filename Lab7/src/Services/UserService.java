@@ -4,13 +4,13 @@
  */
 package Services;
 
+import BackEnd.Admin;       
 import BackEnd.Instructor;
 import BackEnd.Student;
 import BackEnd.User;
 import Utils.InputValidator;
 import Utils.PasswordHasher;
 import databse.JsonDatabaseManager;
-
 
 public class UserService {
 
@@ -22,49 +22,56 @@ public class UserService {
         this.currentUser = null;
     }
 
-public boolean signup(String username, String email, String password, String role) {
-    if (!InputValidator.isRequiredFieldValid(username) ||
-        !InputValidator.isRequiredFieldValid(password) ||
-        !InputValidator.isValidEmail(email)) {
-        return false;
-    }
+    public boolean signup(String username, String email, String password, String role) {
+      
+        if (!InputValidator.isRequiredFieldValid(username) ||
+            !InputValidator.isRequiredFieldValid(password) ||
+            !InputValidator.isValidEmail(email)) {
+            return false;
+        }
 
-  
-    if (dbManager.getUserByEmail(email) != null) {
         
-    }
-    if (dbManager.getUserByUsername(username) != null) {
-        return false; 
-    }
+        if (dbManager.getUserByEmail(email) != null || dbManager.getUserByUsername(username) != null) {
+            return false;
+        }//lab 8
 
-    String passwordHash = PasswordHasher.hash(password);
-    String userId = dbManager.generateNewUserId();
-    User user;
+        
+        String passwordHash = PasswordHasher.hash(password);
+        String userId = dbManager.generateNewUserId();
+        User user; //lab 8
 
-    if ("Student".equalsIgnoreCase(role)) {
-        user = new Student(userId, username, email, passwordHash);
-    } else if ("Instructor".equalsIgnoreCase(role)) {
-        user = new Instructor(userId, username, email, passwordHash);
-    } else {
-        return false;
+       
+        if ("Student".equalsIgnoreCase(role)) {
+            user = new Student(userId, username, email, passwordHash);
+        } else if ("Instructor".equalsIgnoreCase(role)) {
+            user = new Instructor(userId, username, email, passwordHash);
+        } else if ("Admin".equalsIgnoreCase(role)) {
+            user = new Admin(userId, username, email, passwordHash);
+        } else {
+            return false; 
+        } //lab 8
+
+        
+        dbManager.saveUser(user);
+        return true;
     }
-
-    return dbManager.saveUser(user);
-}
 
     public User login(String email, String password) {
+        
         if (!InputValidator.isValidEmail(email) || !InputValidator.isRequiredFieldValid(password)) {
             return null;
         }
 
-        User user = (User) dbManager.getUserByEmail(email);
+        
+        User user = dbManager.getUserByEmail(email);
         if (user == null) {
-            return null;
+            return null; 
         }
 
+        
         String passwordHash = PasswordHasher.hash(password);
         if (user.getPasswordHash().equals(passwordHash)) {
-            this.currentUser = user;
+            this.currentUser = user; 
             return user;
         }
 
