@@ -26,18 +26,18 @@ public class AdminService {
     public List<Course> getPendingCourses() {
         List<Course> pending = new ArrayList<>();
         for (Course course : dbManager.getAllCourses()) {
-            if (course.getStatus() == Course.CourseStatus.pending) {
+            if (course.getStatus() == Course.CourseStatus.PENDING) {
                 pending.add(course);
             }
         }
         return pending;
     }
 
-    // [LAB 8 NEW] Logic to change status to APPROVED
+   
     public boolean approveCourse(String courseId) {
         Course course = dbManager.getCourseById(courseId);
-        if (course != null && course.getStatus() == Course.CourseStatus.pending) {
-            course.setStatus(Course.CourseStatus.aprroved);
+        if (course != null && course.getStatus() == Course.CourseStatus.PENDING) {
+            course.setStatus(Course.CourseStatus.APPROVED);
             dbManager.saveCourse(course); 
             return true;
         }
@@ -47,8 +47,8 @@ public class AdminService {
     
     public boolean rejectCourse(String courseId) {
         Course course = dbManager.getCourseById(courseId);
-        if (course != null && course.getStatus() == Course.CourseStatus.pending) {
-            course.setStatus(Course.CourseStatus.rejected);
+        if (course != null && course.getStatus() == Course.CourseStatus.PENDING) {
+            course.setStatus(Course.CourseStatus.REJECTED);
             dbManager.saveCourse(course);
             return true;
         }
