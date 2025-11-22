@@ -1,0 +1,118 @@
+{
+  "C92080": {
+    "courseId": "C92080",
+    "title": "strength",
+    "description": "strength of materials",
+    "instructorId": "U43546",
+    "lessons": [
+      {
+        "lessonId": "L84545",
+        "title": "strength basics",
+        "content": "how do strength\nwhy is strength \nla aboso strength",
+        "resources": [
+          "facebook"
+        ]
+      }
+    ],
+    "students": [
+      "U41691",
+      "U104798"
+    ]
+  },
+  "C66763": {
+    "courseId": "C66763",
+    "title": "ML",
+    "description": "machine learning",
+    "instructorId": "U106245",
+    "lessons": [
+      {
+        "lessonId": "L98216",
+        "title": "Ai",
+        "content": "machine learning is so so good",
+        "resources": []
+      },
+      {
+        "lessonId": "L11461",
+        "title": "AI 2",
+        "content": "Ai is very very good",
+        "resources": []
+      },
+      {
+        "lessonId": "L104231",
+        "title": "ai55",
+        "content": "ai is very very good always",
+        "resources": [
+          "wikipedia",
+          "linux redhat",
+          "papa",
+          "papapapa"
+        ]
+      }
+    ],
+    "students": [
+      "U104798",
+      "U104599"
+    ]
+  },
+  "C64288": {
+    "courseId": "C64288",
+    "title": "programmin2",
+    "description": "java language",
+    "instructorId": "U106245",
+    "lessons": [
+      {
+        "lessonId": "L32934",
+        "title": "oop",
+        "content": "Ahmed elsayed is very very good TA",
+        "resources": []
+      },
+      {
+        "lessonId": "L27258",
+        "title": "oop2",
+        "content": "Ahmed elsayed is very very very very good TA",
+        "resources": []
+      },
+      {
+        "lessonId": "L18206",
+        "title": "oop3",
+        "content": "ahmed elsayed habibi",
+        "resources": []
+      }
+    ],
+    "students": [
+      "U104798",
+      "U98499",
+      "U104599"
+    ]
+  },
+  "C80126": {
+    "courseId": "C80126",
+    "title": "OS",
+    "description": "explaining operating systems",
+    "instructorId": "U106245",
+    "lessons": [
+      {
+        "lessonId": "L24330",
+        "title": "Linux",
+        "content": "linux is shit",
+        "resources": []
+      },
+      {
+        "lessonId": "L58995",
+        "title": "windows",
+        "content": "windows is shit",
+        "resources": []
+      },
+      {
+        "lessonId": "L11822",
+        "title": "mac os",
+        "content": "mac os is shit",
+        "resources": []
+      }
+    ],
+    "students": [
+      "U104798",
+      "U104599"
+    ]
+  }
+}

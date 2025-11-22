@@ -1,0 +1,188 @@
+package Services;
+
+import BackEnd.*;
+import BackEnd.Quiz;
+import Quiz.Question;
+import Utils.IdGenerator;
+import Utils.InputValidator;
+import databse.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
+public class InstructorService {
+
+    private JsonDatabaseManager dbManager;
+    private Instructor currentInstructor;
+
+    public InstructorService(JsonDatabaseManager dbManager, User currentUser) {
+        this.dbManager = dbManager;
+        if (currentUser instanceof Instructor) {
+            this.currentInstructor = (Instructor) currentUser;
+        } else {
+            throw new IllegalArgumentException("User must be an Instructor");
+        }
+    }
+
+    public Course createCourse(String title, String description) {
+        if (!InputValidator.isRequiredFieldValid(title) || !InputValidator.isRequiredFieldValid(description)) {
+            return null;
+        }
+
+        Course course = new Course(title, description, currentInstructor.getUserId());
+        boolean saved = dbManager.saveCourse(course);
+
+        if (saved) {
+            currentInstructor.getCreatedCourses().add(course.getCourseId());
+            dbManager.saveUser(currentInstructor);
+            return course;
+        }
+        return null;
+    }
+
+    public boolean editCourse(String courseId, String newTitle, String newDescription) {
+        Course course = (Course) dbManager.getCourseById(courseId);
+
+        if (course == null || !course.getInstructorId().equals(currentInstructor.getUserId())) {
+            return false;
+        }
+
+        if (InputValidator.isRequiredFieldValid(newTitle)) {
+            course.setTitle(newTitle);
+        }
+        if (InputValidator.isRequiredFieldValid(newDescription)) {
+            course.setDescription(newDescription);
+        }
+
+        dbManager.saveCourse(course);
+        return true;
+    }
+
+    public boolean deleteCourse(String courseId) {
+        Course course = (Course) dbManager.getCourseById(courseId);
+
+        if (course == null || !course.getInstructorId().equals(currentInstructor.getUserId())) {
+            return false;
+        }
+
+        dbManager.deleteCourse(courseId);
+
+        currentInstructor.getCreatedCourses().remove(courseId);
+        dbManager.saveUser(currentInstructor);
+
+        return true;
+    }
+
+    public Lesson addLesson(String courseId, String lessonTitle, String lessonContent) {
+        Course course = (Course) dbManager.getCourseById(courseId);
+
+        if (course == null || !course.getInstructorId().equals(currentInstructor.getUserId())) {
+            return null;
+        }
+
+        if (!InputValidator.isRequiredFieldValid(lessonTitle) || !InputValidator.isRequiredFieldValid(lessonContent)) {
+            return null;
+        }
+
+        Lesson lesson = new Lesson(lessonTitle, lessonContent);
+        course.addLesson(lesson);
+        dbManager.saveCourse(course);
+
+        return lesson;
+    }
+
+    public boolean editLesson(String courseId, String lessonId, String newTitle, String newContent) {
+        Course course = (Course) dbManager.getCourseById(courseId);
+
+        if (course == null || !course.getInstructorId().equals(currentInstructor.getUserId())) {
+            return false;
+        }
+
+        Lesson lesson = course.getLessonById(lessonId);
+        if (lesson == null) {
+            return false;
+        }
+
+        if (InputValidator.isRequiredFieldValid(newTitle)) {
+            lesson.setTitle(newTitle);
+        }
+        if (InputValidator.isRequiredFieldValid(newContent)) {
+            lesson.setContent(newContent);
+        }
+
+        dbManager.saveCourse(course);
+        return true;
+    }
+
+    public boolean deleteLesson(String courseId, String lessonId) {
+        Course course = (Course) dbManager.getCourseById(courseId);
+
+        if (course == null || !course.getInstructorId().equals(currentInstructor.getUserId())) {
+            return false;
+        }
+
+        boolean removed = course.removeLessonById(lessonId);
+        if (removed) {
+            dbManager.saveCourse(course);
+        }
+        return removed;
+    }
+
+    public List<Student> viewEnrolledStudents(String courseId) {
+        Course course = (Course) dbManager.getCourseById(courseId);
+
+        if (course == null || !course.getInstructorId().equals(currentInstructor.getUserId())) {
+            return new ArrayList<>();
+        }
+
+        return dbManager.getStudentsByCourseId(courseId);
+    }
+
+    public List<Course> getInstructorCourses() {
+        List<Course> instructorCourses = new ArrayList<>();
+        Collection<Course> allCourses = dbManager.getAllCourses();
+        for (Course course : allCourses) {
+            if (course.getInstructorId().equals(currentInstructor.getUserId())) {
+                instructorCourses.add(course);
+            }
+        }
+        return instructorCourses;
+    }
+
+    public List<Lesson> getAllLessons() {
+        List<Lesson> allLessons = new ArrayList<>();
+        Collection<Course> allCourses = dbManager.getAllCourses();
+        for (Course course : allCourses) {
+            if (course.getInstructorId().equals(currentInstructor.getUserId())) {
+                allLessons.addAll(course.getLessons());
+            }
+        }
+        return allLessons;
+    }
+
+    public boolean createQuiz(String instructorId, String courseId, String lessonId, String quizTitle, List<Question> questions) {
+        Course course = (Course) dbManager.getCourseById(courseId);
+        if (course == null) {
+            return false;
+        }
+
+        if (!course.getInstructorId().equals(instructorId)) {
+            return false;
+        }
+        Lesson lesson = course.getLessonById(lessonId);
+        if (lesson == null) {
+            return false;
+        }
+
+        String quizId = new IdGenerator().generateQuizId();
+        Quiz quiz = new Quiz(quizId, quizTitle, (ArrayList<Question>) questions);
+
+        lesson.setQuiz(quiz);
+
+        dbManager.saveCourse(course);
+        dbManager.saveQuiz(quiz);
+
+        return true;
+    }
+}
