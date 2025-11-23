@@ -259,7 +259,29 @@ public class EnrolledCourses extends javax.swing.JPanel {
  
  private void downloadCertificate(String Cid)
  {
-     
+      try{
+        
+        String studentID=this.parentDashboard.getStudentId();
+        Certificate cert = certificateService.GenerateCertificate(studentID, Cid);
+        
+        if(cert!=null)
+        {
+            certificateService.StoreCertificate(cert);
+            ObjectNode JsonCert=certificateService.ConvertCertificateToJSON(cert);
+            ObjectMapper mapper = new ObjectMapper();
+            String filename = "Certificate_"+cert.getCertificateID()+".json";
+            File file = new File(filename);
+            mapper.writerWithDefaultPrettyPrinter().writeValue(file,JsonCert);
+            
+            JOptionPane.showMessageDialog(this,"Saved: "+filename);
+            
+        }
+      }
+      
+     catch(Exception e)
+     { 
+        JOptionPane.showMessageDialog(this,"Error:"+e.getMessage());
+     }
      
      
      
