@@ -7,21 +7,33 @@ package FrontEnd;
 
     import Services.StudentService;
     import BackEnd.Course;
-import FrontEnd.Lessons;
+    import FrontEnd.Lessons;
     import java.awt.CardLayout;
     import java.util.List;
-import javax.swing.JOptionPane;
+    import javax.swing.JOptionPane;
     import javax.swing.table.DefaultTableModel;
     import javax.swing.JPanel;
+
+
+import Services.CertificateService;                         // lab8//
+import BackEnd.Certificate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.File;                                        // lab8 //
+
+
+
 public class EnrolledCourses extends javax.swing.JPanel {
 
     private StudentDashboard parentDashboard;
     private StudentService studentService;
+    private CertificateService certificateService;    //lab8//
     
      public EnrolledCourses(StudentDashboard parentDashboard) {
         initComponents();
         this.parentDashboard = parentDashboard;
         this.studentService = parentDashboard.getStudentService();
+        this.certificateService= new CertificateService(this.parentDashboard.getDbManager());
         loadEnrolledCourses();
         setupListeners();
     }
@@ -114,7 +126,7 @@ public class EnrolledCourses extends javax.swing.JPanel {
  private void loadEnrolledCourses() {
         List<Course> enrolled = studentService.viewEnrolledCourses();
 
-        String[] columnNames = {"Course ID", "Course Name", "Instructor", "Description"};
+        String[] columnNames = {"Course ID", "Course Name", "Instructor", "Description","Statues","Certificate"};
         Object[][] data = new Object[enrolled.size()][4];
 
         for (int i = 0; i < enrolled.size(); i++) {
@@ -123,6 +135,16 @@ public class EnrolledCourses extends javax.swing.JPanel {
             data[i][1] = c.getTitle();
             data[i][2] = c.getInstructorId();
             data[i][3] = c.getDescription();
+                                                      //lab8//
+            String studentID= parentDashboard.getStudentId();
+            
+            if(!certificateService.isCourseCompleted(studentID,c.getCourseId()))
+                data[i][4]="In progress";
+            else 
+                data[i][4]="Certificate Earned";
+            
+            data[i][5]="";
+                
         }
 
         DefaultTableModel model = new DefaultTableModel(data, columnNames) {
@@ -132,6 +154,9 @@ public class EnrolledCourses extends javax.swing.JPanel {
             }
         };
         jTable1.setModel(model);
+        
+        
+        
     }
  private void setupListeners() {
 
@@ -168,4 +193,9 @@ public class EnrolledCourses extends javax.swing.JPanel {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     // End of variables declaration//GEN-END:variables
+
+
+
+
+
 }

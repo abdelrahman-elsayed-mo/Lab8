@@ -296,6 +296,16 @@ public class StudentDashboard extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
 
-
+//lab8// 
+    
+    public JsonDatabaseManager getDbManager()
+    {
+        return this.dbManager;
+    }
+    
+    public String getStudentId()
+    {
+        return this.getStudentId();
+    }
 
 }
