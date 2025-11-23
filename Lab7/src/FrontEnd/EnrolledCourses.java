@@ -128,7 +128,7 @@ public class EnrolledCourses extends javax.swing.JPanel {
         List<Course> enrolled = studentService.viewEnrolledCourses();
 
         String[] columnNames = {"Course ID", "Course Name", "Instructor", "Description","Statues","Certificate"};
-        Object[][] data = new Object[enrolled.size()][4];
+        Object[][] data = new Object[enrolled.size()][6];
 
         for (int i = 0; i < enrolled.size(); i++) {
             Course c = enrolled.get(i);
@@ -231,9 +231,29 @@ public class EnrolledCourses extends javax.swing.JPanel {
 
  private void viewCertificate(String Cid)
  {
-     
-     
-     
+    try{
+        
+        String studentID=this.parentDashboard.getStudentId();
+        Certificate cert = certificateService.GenerateCertificate(studentID, Cid);
+        
+        if(cert!=null)
+        {
+            certificateService.StoreCertificate(cert);
+            ObjectNode JsonCert=certificateService.ConvertCertificateToJSON(cert);
+            
+            String certText=String.format("CERTIFICATE OF COMPLETION\n\nstudent:%s\ncourse:%s\ncertificateId:%s",studentID,Cid,cert.getCertificateID());
+            
+            JOptionPane.showMessageDialog(this,certText,"Certificate",JOptionPane.INFORMATION_MESSAGE);
+        }
+        
+        
+        
+    }
+     catch(Exception e)
+     { 
+        JOptionPane.showMessageDialog(this,"Error:"+e.getMessage());
+     }
+      
  }
  
  
