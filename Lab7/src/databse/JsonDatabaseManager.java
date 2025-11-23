@@ -93,7 +93,7 @@ public class JsonDatabaseManager {
         }
     }
 
-    private void saveUsers() {
+    public void saveUsers() {
         try (FileWriter writer = new FileWriter(USERS_FILE)) {
             gson.toJson(this.userDatabase, writer);
         } catch (IOException e) {

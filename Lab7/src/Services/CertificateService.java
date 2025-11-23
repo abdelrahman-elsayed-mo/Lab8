@@ -1,8 +1,11 @@
 package Services;
 
+import BackEnd.Certificate;
 import databse.JsonDatabaseManager;
 import BackEnd.Lesson;
 import java.util.ArrayList;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 
 public class CertificateService {
@@ -35,7 +38,59 @@ public class CertificateService {
     }
     
     
+    public Certificate GenerateCertificate(String studentId,String courseId)
+    {
+        if(!isCourseCompleted(studentId ,courseId))
+            return  null;
+        else{
+             Certificate cert = new Certificate(studentId,courseId);
+             StoreCertificate(cert);
+             return cert;
+         
+        }   
+    }
     
+    
+    
+    
+    public ObjectNode ConvertCertificateToJSON(Certificate cert)
+    {
+        ObjectMapper objectMapper=new ObjectMapper();
+        
+        ObjectNode certificateJson = objectMapper.createObjectNode();
+        
+        certificateJson.put("certificateId", cert.getCertificateID());
+        certificateJson.put("studentId", cert.getStudentID());
+        certificateJson.put("courseId", cert.getCourseID());
+        certificateJson.put("issueDate", cert.getIssueDate().toString());
+        
+        return certificateJson ;   
+        
+    }
+    
+    public void StoreCertificate(Certificate cert)
+    {
+        String studentId = cert.getStudentID();
+        ObjectMapper objectMapper=new ObjectMapper();
+        ObjectNode userData = dbManager.getUserById(studentId);
+        
+        if(userData==null)
+            return  ;
+        
+        ObjectNode certificateJson=ConvertCertificateToJSON(cert);
+        
+         if (!userData.has("certificates"))
+            userData.set("certificates", objectMapper.createArrayNode());
+         
+         var certificatesArray = userData.withArray("certificates");
+            certificatesArray.add(certificateJson);
+            
+        dbManager.saveUsers();
+              
+    }
+    
+
+
+
 }
-
-
+           
