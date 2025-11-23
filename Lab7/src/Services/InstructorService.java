@@ -327,11 +327,11 @@ public class InstructorService {
         if (course == null || !course.getInstructorId().equals(currentInstructor.getUserId())) {
             return false;
         }
-
+       
         Lesson lesson = course.getLessonById(lessonId);
         if (lesson == null || !lesson.containsQuiz()) {
             return false;
-        }
+        }        
 
         Quiz quiz = lesson.getQuiz();
         for (Question q : quiz.getQuestions()) {

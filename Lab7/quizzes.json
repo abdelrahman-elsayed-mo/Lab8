@@ -1,0 +1,104 @@
+{
+  "Q12345": {
+    "quizID": "Q12345",
+    "name": "OOP Concepts Quiz",
+    "questions": [
+      {
+        "QuestionId": "Q1",
+        "content": "What is inheritance in Java?",
+        "correctAnswer": "A mechanism to create new classes from existing ones",
+        "options": [
+          "A mechanism to create new classes from existing ones",
+          "A way to hide data",
+          "A technique to achieve polymorphism",
+          "A method to overload functions"
+        ]
+      },
+      {
+        "QuestionId": "Q2",
+        "content": "Which keyword is used for inheritance in Java?",
+        "correctAnswer": "extends",
+        "options": [
+          "inherits",
+          "extends",
+          "implements",
+          "super"
+        ]
+      },
+      {
+        "QuestionId": "Q3",
+        "content": "What is polymorphism?",
+        "correctAnswer": "The ability of an object to take many forms",
+        "options": [
+          "The ability to hide implementation details",
+          "The ability of an object to take many forms",
+          "The process of reusing code",
+          "The way to create multiple constructors"
+        ]
+      },
+      {
+        "QuestionId": "Q4",
+        "content": "Which of these is NOT an OOP concept?",
+        "correctAnswer": "Compilation",
+        "options": [
+          "Encapsulation",
+          "Inheritance",
+          "Compilation",
+          "Polymorphism"
+        ]
+      },
+      {
+        "QuestionId": "Q5",
+        "content": "What is the default value of a boolean in Java?",
+        "correctAnswer": "false",
+        "options": [
+          "true",
+          "false",
+          "null",
+          "0"
+        ]
+      }
+    ],
+    "maxAttempts": 3
+  },
+  "Q67890": {
+    "quizID": "Q67890",
+    "name": "Java Basics Quiz",
+    "questions": [
+      {
+        "QuestionId": "J1",
+        "content": "What is the size of an int in Java?",
+        "correctAnswer": "32 bits",
+        "options": [
+          "16 bits",
+          "32 bits",
+          "64 bits",
+          "Depends on the system"
+        ]
+      },
+      {
+        "QuestionId": "J2",
+        "content": "Which of these is a valid Java identifier?",
+        "correctAnswer": "_variable",
+        "options": [
+          "2variable",
+          "var-name",
+          "_variable",
+          "variable name"
+        ]
+      },
+      {
+        "QuestionId": "J3",
+        "content": "What does JVM stand for?",
+        "correctAnswer": "Java Virtual Machine",
+        "options": [
+          "Java Variable Machine",
+          "Java Virtual Machine",
+          "Java Visual Machine",
+          "Java Version Manager"
+        ]
+      }
+    ],
+    "maxAttempts": 3
+  }
+}
