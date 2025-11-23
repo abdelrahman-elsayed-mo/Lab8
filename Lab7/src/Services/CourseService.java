@@ -64,4 +64,8 @@ public List<Course> browseAllCourses() {
            return null;
         return lesson.getQuiz();
     }
+    
+    public JsonDatabaseManager getDbManager() {
+    return this.dbManager;
+}
 }
