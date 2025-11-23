@@ -20,6 +20,7 @@ import BackEnd.Certificate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.File;                                        // lab8 //
+import javax.swing.JButton;
 
 
 
@@ -155,6 +156,8 @@ public class EnrolledCourses extends javax.swing.JPanel {
         };
         jTable1.setModel(model);
         
+        addCertificateButtons();         //lab8//
+        
         
         
     }
@@ -193,9 +196,53 @@ public class EnrolledCourses extends javax.swing.JPanel {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     // End of variables declaration//GEN-END:variables
+ 
+//lab8//
+    
+ private void addCertificateButtons()
+ {
+     for(int i=0;i<jTable1.getRowCount();i++)
+     {
+         String statues = jTable1.getValueAt(i, 4).toString();
+         
+         if(statues.equals("Certificate Earned"))
+         {
+             String CourseID=jTable1.getValueAt(i, 0).toString();
+             
+             JPanel buttonPanel=new JPanel();
+             
+             JButton viewButton=new JButton("view");
+             viewButton.addActionListener(e-> viewCertificate(CourseID));
+             
+             JButton downloadButton = new JButton("download");
+             downloadButton.addActionListener(e-> downloadCertificate(CourseID));
+             
+             buttonPanel.add(viewButton);
+             buttonPanel.add(downloadButton);
+             
+             jTable1.setValueAt(buttonPanel, i, 5);
+       
+         }
+     }
+     
 
+     
+ }
 
-
-
-
+ private void viewCertificate(String Cid)
+ {
+     
+     
+     
+ }
+ 
+ 
+ private void downloadCertificate(String Cid)
+ {
+     
+     
+     
+     
+ }
+    
 }
