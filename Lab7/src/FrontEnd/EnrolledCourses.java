@@ -282,6 +282,8 @@ public class EnrolledCourses extends javax.swing.JPanel {
      { 
         JOptionPane.showMessageDialog(this,"Error:"+e.getMessage());
      }
+      
+      
      
      
      
