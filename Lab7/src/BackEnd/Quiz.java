@@ -55,5 +55,18 @@ public class Quiz {
       double S = (score*100)/questions.size();
       return S;
     }
+
+    public void setQuizID(String quizID) {
+        this.quizID = quizID;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setQuestions(ArrayList<Question> questions) {
+        this.questions = questions;
+    }
+
         
 }
