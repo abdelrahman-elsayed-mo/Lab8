@@ -39,6 +39,20 @@ public class Question {
     public ArrayList<String> getOptions() {
         return options;
     }
+
+   
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public void setCorrectAnswer(String correctAnswer) {
+        this.correctAnswer = correctAnswer;
+    }
+
+    public void setOptions(ArrayList<String> options) {
+        this.options = options;
+    }
     
 }
 

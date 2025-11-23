@@ -325,7 +325,18 @@ public boolean saveQuizAttempt(QuizAttempt attempt) {
     }
 }
 
-
+public boolean deleteQuiz(String quizId) {
+    boolean remove=false;
+    for(Quiz Q : quizdata){
+        if(Q.getQuizID()==quizId)
+             remove = quizdata.remove(Q);
+               
+    }
+    if (remove) {
+        saveQuizzes();
+    }
+    return remove;
+}
 
 
 }
