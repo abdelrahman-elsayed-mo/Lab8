@@ -13,6 +13,7 @@
     import BackEnd.User;
     import Quiz.QuizAttempt;
     import Utils.IdGenerator;
+    import java.util.stream.Collectors;
 
     import com.google.gson.Gson;
     import com.google.gson.GsonBuilder;
@@ -374,6 +375,12 @@
         }
         return remove;
     }
+public List<QuizAttempt> getAttemptsByQuizId(String quizId) {
+    
+    return this.quizAttemptData.stream()
+            .filter(attempt -> attempt.getQuizId().equals(quizId))
+            .collect(Collectors.toList());
+}
 
 
     }
