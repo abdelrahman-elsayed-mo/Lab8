@@ -48,8 +48,6 @@ public class LessonContent extends javax.swing.JPanel {
         attemptsValueLabel.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
         attemptsValueLabel.setForeground(new java.awt.Color(102, 102, 255));
         
-        // Add them to the layout (you'll need to adjust your layout accordingly)
-        // This is a simplified version - you might need to adjust based on your exact layout
     }
     /**
      * This method is called from within the constructor to initialize the form.
@@ -209,7 +207,7 @@ public class LessonContent extends javax.swing.JPanel {
             return;
         }
         
-        // Check attempts before starting quiz
+   
         String studentId = parentDashboard.getStudentId();
         String quizId = currentLesson.getQuiz().getQuizID();
         int attemptsLeft = quizService.getRemainingAttempts(studentId, quizId);
@@ -223,7 +221,6 @@ public class LessonContent extends javax.swing.JPanel {
             return;
         }
         
-        // Navigate to quiz panel
         QuizPanel quizPanel = parentDashboard.getQuizPanel();
         quizPanel.loadQuiz(currentCourseId, currentLesson.getLessonId(), currentLesson.getQuiz());
         
@@ -263,40 +260,33 @@ public class LessonContent extends javax.swing.JPanel {
     
     if (currentLesson.getQuiz() == null) {
         System.out.println("No quiz for this lesson");
-        // No quiz - student can complete the lesson immediately
+        
         jLabel2.setText("Highest score: No quiz");
         jLabel3.setText("Attempts left: N/A");
         StartQuiz.setEnabled(false);
-        Complete.setEnabled(true); // Can complete lesson without quiz
+        Complete.setEnabled(true);
         System.out.println("No quiz - Complete enabled: true");
         return;
     }
-    
-    // We have a quiz - get the data
+
     Quiz quiz = currentLesson.getQuiz();
     String studentId = parentDashboard.getStudentId();
     String quizId = quiz.getQuizID();
     
     System.out.println("Processing quiz - Student: " + studentId + ", Quiz: " + quizId);
-    
-    // Get quiz data from service
+   
     Double bestScore = quizService.getBestScore(studentId, quizId);
     int attemptsLeft = quizService.getRemainingAttempts(studentId, quizId);
     int totalAttemptsUsed = quiz.getMaxAttempts() - attemptsLeft;
     
     System.out.println("Service returned - BestScore: " + bestScore + ", AttemptsLeft: " + attemptsLeft);
     
-    // Update labels
     String scoreText = (bestScore != null) ? String.format("%.1f%%", bestScore) : "Not taken";
     jLabel2.setText("Highest score: " + scoreText);
     jLabel3.setText("Attempts left: " + attemptsLeft);
     
-    // NEW LOGIC: Enable Complete button only if:
-    // - There's no quiz OR
-    // - There is a quiz AND student has at least one attempt (regardless of score)
     boolean canCompleteLesson = (bestScore != null) || (totalAttemptsUsed > 0);
     
-    // Enable Start Quiz button if there are attempts left
     boolean canStartQuiz = (attemptsLeft > 0);
     
     StartQuiz.setEnabled(canStartQuiz);
@@ -306,8 +296,7 @@ public class LessonContent extends javax.swing.JPanel {
                       ", Complete enabled: " + canCompleteLesson +
                       ", Attempts used: " + totalAttemptsUsed);
     System.out.println("=== updateQuizInfo() END ===");
-    
-    // Refresh UI
+   
     revalidate();
     repaint();
 }

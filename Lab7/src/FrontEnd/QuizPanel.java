@@ -50,14 +50,13 @@ public class QuizPanel extends javax.swing.JPanel {
         this.studentAnswers.clear();
         this.showAnswers = false;
         
-        // Check attempts before showing question
+
         this.remainingAttempts = quizService.getRemainingAttempts(studentId, quiz.getQuizID());
         if (remainingAttempts <= 0) {
             showNoAttemptsMessage();
             return;
         }
         
-        // Initialize studentAnswers with null values for all questions
         for (int i = 0; i < questions.size(); i++) {
             studentAnswers.add(null);
         }
@@ -208,7 +207,7 @@ private int getUsedAttemptsCount() {
         if (Submit1.getText().equals("Submit Quiz")) {
             submitQuiz();
         }
-        // Other modes (Show Answers, Back to Lesson) are handled in their respective methods
+      
         }
 
 
@@ -216,37 +215,32 @@ private int getUsedAttemptsCount() {
     }//GEN-LAST:event_Submit1ActionPerformed
  private void showQuestion() {
     if (currentQuestionIndex >= questions.size()) {
-        // This should not happen in normal flow since Submit button handles this
-        // But if it does, calculate score and show results
+      
         calculateAndShowResults();
         return;
     }
     
     Question currentQuestion = questions.get(currentQuestionIndex);
-    
-    // Update UI components with attempt info
+   
     Ttile.setText("Question " + (currentQuestionIndex + 1) + " of " + questions.size() + 
                  " (Attempts: " + remainingAttempts + " remaining)");
     jTextArea1.setText(currentQuestion.getContent());
     jTextArea1.setLineWrap(true);
     jTextArea1.setWrapStyleWord(true);
-    
-    // Set up combo box
+   
     jComboBox1.removeAllItems();
     jComboBox1.addItem("-- Select Answer --");
     for (String option : currentQuestion.getOptions()) {
         jComboBox1.addItem(option);
     }
     
-    // Restore previous answer if exists
     StudentAnswer previousAnswer = studentAnswers.get(currentQuestionIndex);
     if (previousAnswer != null) {
         jComboBox1.setSelectedItem(previousAnswer.getStudentAnswer());
     } else {
         jComboBox1.setSelectedIndex(0);
     }
-    
-    // Update button states
+   
     Previous.setEnabled(currentQuestionIndex > 0);
     
     if (currentQuestionIndex == questions.size() - 1) {
@@ -254,7 +248,6 @@ private int getUsedAttemptsCount() {
         Submit1.setVisible(true);
         Submit1.setText("Submit Quiz");
         
-        // Make sure Submit button has the correct action listener
         for (java.awt.event.ActionListener al : Submit1.getActionListeners()) {
             Submit1.removeActionListener(al);
         }
@@ -263,8 +256,7 @@ private int getUsedAttemptsCount() {
         Next.setVisible(true);
         Submit1.setVisible(false);
     }
-    
-    // Show all components
+
     jComboBox1.setVisible(true);
     Previous.setVisible(true);
     
@@ -272,7 +264,7 @@ private int getUsedAttemptsCount() {
     repaint();
 }
      private void calculateAndShowResults() {
-    // Calculate score from current answers
+   
     if (studentAnswers != null && !studentAnswers.isEmpty()) {
         String attemptId = new IdGenerator().generateAttemptId();
         QuizAttempt attempt = new QuizAttempt(attemptId, studentId, currentQuiz.getQuizID(), 0, 
@@ -280,7 +272,7 @@ private int getUsedAttemptsCount() {
         double score = currentQuiz.evaluate(attempt);
         showResults(score);
     } else {
-        // If no answers, show 0 score
+        
         showResults(0.0);
     }
 }
@@ -298,10 +290,8 @@ private int getUsedAttemptsCount() {
      private void showResults(double score) {
     Ttile.setText("Quiz Results");
     
-    // Create a tabbed pane for better organization
     JTabbedPane tabbedPane = new JTabbedPane();
     
-    // Tab 1: Summary
     JPanel summaryPanel = new JPanel(new BorderLayout());
     JTextArea summaryText = new JTextArea();
     summaryText.setEditable(false);
@@ -326,9 +316,165 @@ private int getUsedAttemptsCount() {
     );
     summaryText.setText(summary);
     summaryPanel.add(new JScrollPane(summaryText), BorderLayout.CENTER);
-    tabbedPane.addTab("Summary", summaryPanel);
     
-    // Tab 2: Detailed Answers
+    JPanel buttonPanel = new JPanel(new FlowLayout());
+    JButton showAnswersBtn = createShowAnswersButton();
+    buttonPanel.add(showAnswersBtn);
+    summaryPanel.add(buttonPanel, BorderLayout.SOUTH);
+    
+    tabbedPane.addTab("Summary", summaryPanel);
+
+    JPanel answersPanel = createDetailedAnswersPanel();
+    tabbedPane.addTab("Detailed Review", answersPanel);
+    
+
+    removeAll();
+    setLayout(new BorderLayout());
+    
+    JPanel topPanel = new JPanel(new BorderLayout());
+    topPanel.add(Ttile, BorderLayout.WEST);
+    
+    JButton backButton = new JButton("Back to Lesson");
+    backButton.addActionListener(e -> goBackToLesson());
+    topPanel.add(backButton, BorderLayout.EAST);
+    
+    add(topPanel, BorderLayout.NORTH);
+    add(tabbedPane, BorderLayout.CENTER);
+    
+    revalidate();
+    repaint();
+    
+    if (score >= 50) {
+        JOptionPane.showMessageDialog(this, 
+            "Congratulations! You passed the quiz with " + String.format("%.1f", score) + "%", 
+            "Quiz Passed", 
+            JOptionPane.INFORMATION_MESSAGE);
+    }
+}
+     private void showAllAnswers() {
+        StringBuilder answersText = new StringBuilder();
+        answersText.append("Quiz Answers:\n\n");
+        
+        for (int i = 0; i < questions.size(); i++) {
+            Question question = questions.get(i);
+            StudentAnswer studentAnswer = studentAnswers.get(i);
+            
+            answersText.append("Question ").append(i + 1).append(":\n");
+            answersText.append(question.getContent()).append("\n");
+            answersText.append("Correct Answer: ").append(question.getCorrectAnswer()).append("\n");
+            
+            String studentAnswerText = studentAnswer != null ? studentAnswer.getStudentAnswer() : "Not answered";
+            boolean isCorrect = studentAnswer != null && studentAnswer.isCorrect();
+            
+            answersText.append("Your Answer: ").append(studentAnswerText);
+            answersText.append(isCorrect ? " ✓\n" : " ✗\n");
+            answersText.append("\n");
+        }
+        
+        Ttile.setText("Quiz Answers");
+        jTextArea1.setText(answersText.toString());
+        
+        Submit1.setText("Back to Lesson");
+        Submit1.setVisible(true);
+       
+        for (java.awt.event.ActionListener al : Submit1.getActionListeners()) {
+            Submit1.removeActionListener(al);
+        }
+        Submit1.addActionListener(evt -> goBackToLesson());
+        
+        revalidate();
+        repaint();
+    }
+
+    private void goBackToLesson() {
+           removeAll();
+    initComponents();
+    
+    LessonContent lessonContent = parentDashboard.getLessonContentPanel();
+    if (lessonContent != null) {
+        lessonContent.loadLesson(currentCourseId, currentLessonId);
+    }
+      CardLayout cl = (CardLayout) parentDashboard.getContentPanel().getLayout();
+    cl.show(parentDashboard.getContentPanel(), "lessonContent");;
+    }
+
+    public QuizPanel() {
+        initComponents();
+    }
+    
+     private void submitQuiz() {
+   
+    saveCurrentAnswer();
+ 
+    boolean allAnswered = true;
+    List<Integer> unansweredQuestions = new ArrayList<>();
+    
+    for (int i = 0; i < questions.size(); i++) {
+        if (studentAnswers.get(i) == null) {
+            allAnswered = false;
+            unansweredQuestions.add(i + 1);
+        }
+    }
+    
+    if (!allAnswered) {
+        String message = "Please answer all questions before submitting.\n" +
+                        "Unanswered questions: " + unansweredQuestions;
+        JOptionPane.showMessageDialog(this, message, 
+            "Incomplete Quiz", JOptionPane.WARNING_MESSAGE);
+        return;
+    }
+   
+    int currentRemainingAttempts = quizService.getRemainingAttempts(studentId, currentQuiz.getQuizID());
+    if (currentRemainingAttempts <= 0) {
+        JOptionPane.showMessageDialog(this, 
+            "You have no attempts remaining for this quiz.",
+            "No Attempts Remaining", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+   
+    int confirm = JOptionPane.showConfirmDialog(this,
+        "Are you sure you want to submit the quiz?\nThis will use one of your attempts.",
+        "Confirm Quiz Submission", JOptionPane.YES_NO_OPTION);
+    
+    if (confirm != JOptionPane.YES_OPTION) {
+        return;
+    }
+    
+    try {
+        String attemptId = new IdGenerator().generateAttemptId();
+        QuizAttempt attempt = new QuizAttempt(attemptId, studentId, 
+            currentQuiz.getQuizID(), 0, new ArrayList<>(studentAnswers));
+        
+        boolean submitted = quizService.submit(attempt);
+       
+        if (submitted) {
+            double score = currentQuiz.evaluate(attempt);
+            showResults(score); 
+        } else {
+            JOptionPane.showMessageDialog(this, 
+                "Failed to submit quiz. Please try again.",
+                "Submission Failed", JOptionPane.ERROR_MESSAGE);
+        }
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, 
+            "Error submitting quiz: " + e.getMessage(),
+            "Error", JOptionPane.ERROR_MESSAGE);
+        e.printStackTrace();
+    }
+    
+    
+}
+
+     private JButton createShowAnswersButton() {
+    JButton showAnswersBtn = new JButton("Show Answers");
+    showAnswersBtn.setBackground(new Color(102, 102, 255));
+    showAnswersBtn.setForeground(Color.WHITE);
+    showAnswersBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    showAnswersBtn.addActionListener(e -> showAllAnswers());
+    return showAnswersBtn;
+}
+     
+     private JPanel createDetailedAnswersPanel() {
     JPanel answersPanel = new JPanel(new BorderLayout());
     JTextArea answersText = new JTextArea();
     answersText.setEditable(false);
@@ -358,155 +504,9 @@ private int getUsedAttemptsCount() {
     answersBuilder.insert(0, String.format("You got %d out of %d questions correct.\n\n", correctCount, questions.size()));
     answersText.setText(answersBuilder.toString());
     answersPanel.add(new JScrollPane(answersText), BorderLayout.CENTER);
-    tabbedPane.addTab("Detailed Review", answersPanel);
     
-    // Replace the main content with tabbed pane
-    removeAll();
-    setLayout(new BorderLayout());
-    
-    JPanel topPanel = new JPanel(new BorderLayout());
-    topPanel.add(Ttile, BorderLayout.WEST);
-    
-    JButton backButton = new JButton("Back to Lesson");
-    backButton.addActionListener(e -> goBackToLesson());
-    topPanel.add(backButton, BorderLayout.EAST);
-    
-    add(topPanel, BorderLayout.NORTH);
-    add(tabbedPane, BorderLayout.CENTER);
-    
-    revalidate();
-    repaint();
-    
-    // Show congratulatory message
-    if (score >= 50) {
-        JOptionPane.showMessageDialog(this, 
-            "Congratulations! You passed the quiz with " + String.format("%.1f", score) + "%", 
-            "Quiz Passed", 
-            JOptionPane.INFORMATION_MESSAGE);
-    }
+    return answersPanel;
 }
-   private void showAllAnswers() {
-        StringBuilder answersText = new StringBuilder();
-        answersText.append("Quiz Answers:\n\n");
-        
-        for (int i = 0; i < questions.size(); i++) {
-            Question question = questions.get(i);
-            StudentAnswer studentAnswer = studentAnswers.get(i);
-            
-            answersText.append("Question ").append(i + 1).append(":\n");
-            answersText.append(question.getContent()).append("\n");
-            answersText.append("Correct Answer: ").append(question.getCorrectAnswer()).append("\n");
-            
-            String studentAnswerText = studentAnswer != null ? studentAnswer.getStudentAnswer() : "Not answered";
-            boolean isCorrect = studentAnswer != null && studentAnswer.isCorrect();
-            
-            answersText.append("Your Answer: ").append(studentAnswerText);
-            answersText.append(isCorrect ? " ✓\n" : " ✗\n");
-            answersText.append("\n");
-        }
-        
-        Ttile.setText("Quiz Answers");
-        jTextArea1.setText(answersText.toString());
-        
-        Submit1.setText("Back to Lesson");
-        Submit1.setVisible(true);
-        
-        // Change submit button to go back to lesson
-        for (java.awt.event.ActionListener al : Submit1.getActionListeners()) {
-            Submit1.removeActionListener(al);
-        }
-        Submit1.addActionListener(evt -> goBackToLesson());
-        
-        revalidate();
-        repaint();
-    }
-
-    private void goBackToLesson() {
-           removeAll();
-    initComponents();
-    
-    // Refresh the lesson content to update scores and attempts
-    LessonContent lessonContent = parentDashboard.getLessonContentPanel();
-    if (lessonContent != null) {
-        lessonContent.loadLesson(currentCourseId, currentLessonId);
-    }
-    
-    // Navigate back to lesson content
-    CardLayout cl = (CardLayout) parentDashboard.getContentPanel().getLayout();
-    cl.show(parentDashboard.getContentPanel(), "lessonContent");;
-    }
-
-    /**
-     * Creates new form Quiz
-     */
-    public QuizPanel() {
-        initComponents();
-    }
-    
-     private void submitQuiz() {
-    // Save current answer before validation
-    saveCurrentAnswer();
-    
-    // Check if all questions are answered
-    boolean allAnswered = true;
-    List<Integer> unansweredQuestions = new ArrayList<>();
-    
-    for (int i = 0; i < questions.size(); i++) {
-        if (studentAnswers.get(i) == null) {
-            allAnswered = false;
-            unansweredQuestions.add(i + 1);
-        }
-    }
-    
-    if (!allAnswered) {
-        String message = "Please answer all questions before submitting.\n" +
-                        "Unanswered questions: " + unansweredQuestions;
-        JOptionPane.showMessageDialog(this, message, 
-            "Incomplete Quiz", JOptionPane.WARNING_MESSAGE);
-        return;
-    }
-    
-    // Final attempt check
-    int currentRemainingAttempts = quizService.getRemainingAttempts(studentId, currentQuiz.getQuizID());
-    if (currentRemainingAttempts <= 0) {
-        JOptionPane.showMessageDialog(this, 
-            "You have no attempts remaining for this quiz.",
-            "No Attempts Remaining", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-    
-    // Confirm submission
-    int confirm = JOptionPane.showConfirmDialog(this,
-        "Are you sure you want to submit the quiz?\nThis will use one of your attempts.",
-        "Confirm Quiz Submission", JOptionPane.YES_NO_OPTION);
-    
-    if (confirm != JOptionPane.YES_OPTION) {
-        return;
-    }
-    
-    try {
-        String attemptId = new IdGenerator().generateAttemptId();
-        QuizAttempt attempt = new QuizAttempt(attemptId, studentId, 
-            currentQuiz.getQuizID(), 0, new ArrayList<>(studentAnswers));
-        
-        boolean submitted = quizService.submit(attempt);
-        
-        if (submitted) {
-            double score = currentQuiz.evaluate(attempt);
-            showResults(score); // This now shows results immediately with back button
-        } else {
-            JOptionPane.showMessageDialog(this, 
-                "Failed to submit quiz. Please try again.",
-                "Submission Failed", JOptionPane.ERROR_MESSAGE);
-        }
-    } catch (Exception e) {
-        JOptionPane.showMessageDialog(this, 
-            "Error submitting quiz: " + e.getMessage(),
-            "Error", JOptionPane.ERROR_MESSAGE);
-        e.printStackTrace();
-    }
-}
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Next;
     private javax.swing.JButton Previous;

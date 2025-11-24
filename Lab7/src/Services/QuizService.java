@@ -59,7 +59,7 @@ public class QuizService {
     }
     }
 
-    // this method makes sure that the attempts is less than 3
+    
     public boolean canSubmit(String studentId, String quizId) {
         Quiz Q = dbManager.getQuizById(quizId);
         if (Q == null) {

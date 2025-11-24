@@ -32,6 +32,21 @@
     "email": "ahmed@gmail.com",
     "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
   },
+  "U44709": {
+    "enrolledCourses": [
+      "C85814"
+    ],
+    "progress": {
+      "C85814": [
+        "L11577"
+      ]
+    },
+    "userId": "U44709",
+    "role": "Student",
+    "username": "mum",
+    "email": "mum@gmail.com",
+    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+  },
   "U82388": {
     "userId": "U82388",
     "role": "Admin",
