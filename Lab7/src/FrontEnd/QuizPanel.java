@@ -280,13 +280,29 @@ private int getUsedAttemptsCount() {
 
      private void saveCurrentAnswer() {
         String selectedAnswer = (String) jComboBox1.getSelectedItem();
-        if (selectedAnswer != null && !selectedAnswer.equals("-- Select Answer --")) {
-            Question currentQuestion = questions.get(currentQuestionIndex);
-            studentAnswers.set(currentQuestionIndex, new StudentAnswer(currentQuestion, selectedAnswer));
-        } else {
-            studentAnswers.set(currentQuestionIndex, null);
-        }
+        if (selectedAnswer == null || selectedAnswer.equals(" -- Select Answer -- ")) {
+        return; 
     }
+
+    Question currentQuestion = questions.get(currentQuestionIndex);
+    
+    boolean isAnswerCorrect = currentQuestion.checkAnswer(selectedAnswer); 
+
+    String questionId = currentQuestion.getQuestionId(); 
+
+    StudentAnswer newAnswer = new StudentAnswer(
+        questionId, 
+        selectedAnswer, 
+        isAnswerCorrect 
+    );
+    
+    if (currentQuestionIndex < studentAnswers.size()) {
+        studentAnswers.set(currentQuestionIndex, newAnswer); 
+    } else {
+        studentAnswers.add(newAnswer);
+    }
+}
+
      private void showResults(double score) {
     Ttile.setText("Quiz Results");
     

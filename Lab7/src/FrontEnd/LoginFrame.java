@@ -110,9 +110,14 @@ public class LoginFrame extends JFrame {
                 new StudentDashboard(db, loggedInUser.getUserId()).setVisible(true);
             } 
             else if (loggedInUser.getRole().equalsIgnoreCase("Instructor")) {
-                JsonDatabaseManager db = new JsonDatabaseManager(); 
-                new InstructorDashboard(db, loggedInUser.getUserId()).setVisible(true);
+                JsonDatabaseManager db = new JsonDatabaseManager(); // Added for consistency
+                UserService userService = new UserService(db);
+                QuizService quizService = new QuizService(db);
+                CourseService courseService = new CourseService(db);
+                InstructorService instructorService = null;
+                new InstructorDashboard( db,loggedInUser.getUserId(),instructorService,courseService,quizService, userService).setVisible(true);
             }
+
              else if (loggedInUser.getRole().equalsIgnoreCase("Admin")) {
                 JsonDatabaseManager db = new JsonDatabaseManager();
                 Admin admin = (Admin) loggedInUser;

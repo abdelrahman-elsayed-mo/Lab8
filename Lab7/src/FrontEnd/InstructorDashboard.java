@@ -1,4 +1,4 @@
-package FrontEnd;
+    package FrontEnd;
 
 import Services.*;
 import BackEnd.*;
@@ -20,7 +20,9 @@ public class InstructorDashboard extends JFrame {
     private String currentInstructorId;
     private JsonDatabaseManager dbManager;
     private InstructorService instructorService;
-
+    private CourseService courseService;
+    private QuizService quizService;
+    private UserService userService;
     private JTable coursesTable;
     private JTable lessonsTable;
     private JTable studentsTable;
@@ -53,17 +55,22 @@ public class InstructorDashboard extends JFrame {
     private Map<String, Course> courseMap;
     private Map<String, Lesson> lessonMap;
 
-    public InstructorDashboard(JsonDatabaseManager dbManager, String instructorId) {
+    public InstructorDashboard(JsonDatabaseManager dbManager, String instructorId, InstructorService instructorService, CourseService courseService, QuizService quizService, UserService userService) {
         this.currentInstructorId = instructorId;
         this.dbManager = dbManager;
+        this.instructorService = instructorService;
+        this.courseService = courseService;
+        this.quizService = quizService;
+        this.userService = userService;
 
         User currentUser = dbManager.getUserById(instructorId);
         if (currentUser instanceof Instructor) {
-            this.instructorService = new InstructorService(dbManager, currentUser);
+            this.instructorService = new InstructorService(dbManager, currentUser, this.courseService, this.quizService, this.userService);
         } else {
             JOptionPane.showMessageDialog(this, "Error: User is not an instructor");
             System.exit(1);
         }
+
         initializeUI();
         loadInstructorCourses();
         loadAllLessons();
@@ -97,7 +104,7 @@ public class InstructorDashboard extends JFrame {
         tabbedPane.addTab("All Lessons", createLessonsPanel());
         tabbedPane.addTab("Enrolled Students", createStudentsPanel());
         tabbedPane.addTab("Quiz Management", createQuizManagementPanel());
-
+        tabbedPane.addTab("Performance Analytics", createAnalyticsPanel());
         setLayout(new BorderLayout());
         add(headerPanel, BorderLayout.NORTH);
         add(tabbedPane, BorderLayout.CENTER);
@@ -257,7 +264,7 @@ public class InstructorDashboard extends JFrame {
         Course course = findCourseByLesson(lesson.getLessonId());
 
         JTextField titleField = new JTextField(20);
-        Object[] message = {"Quiz Title:", titleField};
+        Object[] message = {   "Quiz Title:", titleField };
 
         int option = JOptionPane.showConfirmDialog(this, message, "Create Quiz",
                 JOptionPane.OK_CANCEL_OPTION);
@@ -271,8 +278,8 @@ public class InstructorDashboard extends JFrame {
 
             List<Question> questions = new ArrayList<>();
 
-            boolean success = instructorService.createQuiz(course.getCourseId(), lesson.getLessonId(), title, questions);
-
+            boolean success = instructorService.createQuiz( course.getCourseId(),lesson.getLessonId(),title,questions );
+            
             if (success) {
                 JOptionPane.showMessageDialog(this, "Quiz created successfully!");
                 refreshQuizData();
@@ -371,16 +378,12 @@ public class InstructorDashboard extends JFrame {
         }
 
         Lesson lesson = lessonMap.get(selectedLesson);
-        if (lesson == null || lesson.getQuiz() == null) {
-            JOptionPane.showMessageDialog(this, "No quiz found for this lesson. Create a quiz first.");
+        if (lesson.getQuiz() == null) {
+            JOptionPane.showMessageDialog(this, "No quiz found for this lesson.");
             return;
         }
 
         Course course = findCourseByLesson(lesson.getLessonId());
-        if (course == null) {
-            JOptionPane.showMessageDialog(this, "Course not found.");
-            return;
-        }
 
         JTextField contentField = new JTextField(30);
         JTextField correctAnswerField = new JTextField(20);
@@ -408,42 +411,29 @@ public class InstructorDashboard extends JFrame {
                 return;
             }
 
-            // Parse options
             ArrayList<String> options = new ArrayList<>();
             String[] optionsArray = optionsText.split("\\r?\\n");
             for (String opt : optionsArray) {
-                String trimmedOpt = opt.trim();
-                if (!trimmedOpt.isEmpty()) {
-                    options.add(trimmedOpt);
+                if (!opt.trim().isEmpty()) {
+                    options.add(opt.trim());
                 }
             }
 
-            // Validate that correct answer is in options
-            if (!options.contains(correctAnswer)) {
-                JOptionPane.showMessageDialog(this,
-                        "Correct answer must be one of the options!");
-                return;
-            }
+            IdGenerator ID = new IdGenerator();
+            String questionId = ID.generateQuestionId();
+            Question newQuestion = new Question(questionId, content, correctAnswer, options);
 
-            try {
-                String questionId = new IdGenerator().generateQuestionId();
-                Question newQuestion = new Question(questionId, content, correctAnswer, options);
+            boolean success = instructorService.addQuestionToQuiz(
+                    course.getCourseId(),
+                    lesson.getLessonId(),
+                    newQuestion
+            );
 
-                boolean success = instructorService.addQuestionToQuiz(
-                        course.getCourseId(),
-                        lesson.getLessonId(),
-                        newQuestion
-                );
-
-                if (success) {
-                    JOptionPane.showMessageDialog(this, "Question added successfully!");
-                    refreshQuizData();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Failed to add question. Check console for details.");
-                }
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Error adding question: " + e.getMessage());
-                e.printStackTrace();
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Question added successfully!");
+                refreshQuizData();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add question.");
             }
         }
     }
@@ -469,7 +459,7 @@ public class InstructorDashboard extends JFrame {
 
         Course course = findCourseByLesson(lesson.getLessonId());
         String questionId = (String) quizTableModel.getValueAt(selectedRow, 0);
-
+        
         Question questionToRemove = null;
         for (Question q : lesson.getQuiz().getQuestions()) {
             if (q.getQuestionId().equals(questionId)) {
@@ -707,7 +697,11 @@ public class InstructorDashboard extends JFrame {
                 for (Lesson lesson : course.getLessons()) {
                     String contentPreview = lesson.getContent().length() > 50
                             ? lesson.getContent().substring(0, 50) + "..." : lesson.getContent();
-                    lessonsTableModel.addRow(new Object[]{ lesson.getLessonId(),lesson.getTitle(),course.getTitle(),contentPreview
+                    lessonsTableModel.addRow(new Object[]{
+                        lesson.getLessonId(),
+                        lesson.getTitle(),
+                        course.getTitle(),
+                        contentPreview
                     });
                 }
             }
@@ -730,7 +724,13 @@ public class InstructorDashboard extends JFrame {
                         String progress = totalLessons > 0
                                 ? (completedLessons * 100 / totalLessons) + "%" : "0%";
 
-                        studentsTableModel.addRow(new Object[]{student.getUserId(), student.getUsername(), student.getEmail(), course.getTitle(), progress});
+                        studentsTableModel.addRow(new Object[]{
+                            student.getUserId(),
+                            student.getUsername(),
+                            student.getEmail(),
+                            course.getTitle(),
+                            progress
+                        });
                     }
                 }
             }
@@ -919,7 +919,6 @@ public class InstructorDashboard extends JFrame {
             }
         }
     }
-
     private void editLesson() {
         int selectedRow = lessonsTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -997,7 +996,6 @@ public class InstructorDashboard extends JFrame {
             }
         }
     }
-
     private void deleteLesson() {
         int selectedRow = lessonsTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -1026,7 +1024,7 @@ public class InstructorDashboard extends JFrame {
             boolean success = instructorService.deleteLesson(lessonCourse.getCourseId(), lessonId);
             if (success) {
                 loadAllLessons();
-                loadInstructorCourses();
+                loadInstructorCourses(); // Refresh course lesson count
                 JOptionPane.showMessageDialog(this, "Lesson deleted successfully!");
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to delete lesson.");
@@ -1098,4 +1096,64 @@ public class InstructorDashboard extends JFrame {
             dispose();
         }
     }
+    private JPanel createAnalyticsPanel() {
+        JPanel analyticsPanel = new JPanel(new BorderLayout(10, 10));
+        
+        JPanel selectionPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JLabel courseLabel = new JLabel("Select Course for Analysis:");
+        JComboBox<Course> courseSelector = new JComboBox<>();
+        JButton viewChartsButton = new JButton("View Performance Charts 📊"); 
+        
+        selectionPanel.add(courseLabel);
+        selectionPanel.add(courseSelector);
+        selectionPanel.add(viewChartsButton);
+        
+        JPanel chartPlaceholder = new JPanel(new GridBagLayout());
+        chartPlaceholder.add(new JLabel("Click 'View Performance Charts' to open the visual analytics window."), new GridBagConstraints());
+        
+        analyticsPanel.add(selectionPanel, BorderLayout.NORTH);
+        analyticsPanel.add(chartPlaceholder, BorderLayout.CENTER); 
+        
+        List<Course> instructorCourses = getInstructorCourses(); 
+        for (Course course : instructorCourses) {
+            courseSelector.addItem(course);
+        }
+        
+        viewChartsButton.addActionListener(e -> {
+            Course selectedCourse = (Course) courseSelector.getSelectedItem();
+            if (selectedCourse != null) {
+                openChartFrame(selectedCourse.getCourseId(), selectedCourse.getTitle()); 
+            } else {
+                JOptionPane.showMessageDialog(this, "Please select a course first.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        if (!instructorCourses.isEmpty()) {
+             courseSelector.setSelectedIndex(0);
+        }
+
+        return analyticsPanel;
+    }
+
+
+    private void openChartFrame(String courseId, String courseTitle) {
+        try {
+            // Collect required data
+            double avgScore = instructorService.calculateCourseAverageScore(courseId);
+            double avgCompletion = instructorService.calculateCourseAverageCompletion(courseId);
+            Map<String, Double> difficultyMap = instructorService.getQuestionDifficulty(courseId);
+            Map<String, Double> studentPerformance = instructorService.getStudentPerformanceInCourse(courseId);
+
+            // Launch the chart frame
+            ChartFrame chartFrame = new ChartFrame(courseTitle, avgScore, avgCompletion, difficultyMap, studentPerformance);
+            chartFrame.setVisible(true);
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error preparing chart data: " + ex.getMessage(), "Analysis Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
+
 }
+
+    
