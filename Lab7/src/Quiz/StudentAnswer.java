@@ -6,21 +6,23 @@ package Quiz;
 
 
 public class StudentAnswer {
-    private Question question;
-   private String studentAnswer;
+    private String questionId; 
+    private String studentAnswer;
+    private boolean isCorrect;
 
-    public StudentAnswer(Question question, String studentAnswer) {
-        this.question = question;
+    public StudentAnswer(String questionId, String studentAnswer, boolean isCorrect) {
+        this.questionId = questionId;
         this.studentAnswer = studentAnswer;
+        this.isCorrect = isCorrect;
     }
     
     
        public boolean isCorrect() {
-        return question.checkAnswer(studentAnswer);
+        return isCorrect;
     }
 
-    public Question getQuestion() {
-        return question;
+    public String getQuestionId() {
+       return questionId;
     }
 
     public String getStudentAnswer() {
@@ -29,3 +31,6 @@ public class StudentAnswer {
     
        
 }
+
+
+
