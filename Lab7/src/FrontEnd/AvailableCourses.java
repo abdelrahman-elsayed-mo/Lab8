@@ -5,10 +5,12 @@
 package FrontEnd;
 
 import BackEnd.Course;
+import BackEnd.User;
 import Services.StudentService;
 import databse.JsonDatabaseManager;
 import java.awt.CardLayout;
 import java.util.List;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 
@@ -95,17 +97,27 @@ public class AvailableCourses extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
    private void loadCourses() {
-        List<Course> courses =  studentService.browseAvailableCourses(); 
+         try {
+        List<Course> courses = studentService.browseAvailableCourses();
+        
+        if (courses.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No available courses found.");
+            return;
+        }
 
-        String[] columnNames = {"Course ID", "Title", "Description", "Instructor ID"};
+        String[] columnNames = {"Course ID", "Title", "Description", "Instructor"};
         Object[][] data = new Object[courses.size()][4];
 
         int i = 0;
         for (Course course : courses) {
+            // Get instructor name instead of ID for better display
+            User instructor = dbManager.getUserById(course.getInstructorId());
+            String instructorName = (instructor != null) ? instructor.getUsername() : "Unknown";
+            
             data[i][0] = course.getCourseId();
             data[i][1] = course.getTitle();
             data[i][2] = course.getDescription();
-            data[i][3] = course.getInstructorId();
+            data[i][3] = instructorName;
             i++;
         }
 
@@ -116,6 +128,10 @@ public class AvailableCourses extends javax.swing.JPanel {
             }
         };
         jTable1.setModel(model);
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error loading courses: " + e.getMessage());
+    }
+         
     }
 
     

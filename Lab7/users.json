@@ -1,35 +1,42 @@
 {
-  "U91125": {
+  "U46383": {
     "enrolledCourses": [
-      "C37218"
+      "C85814"
     ],
     "progress": {
-      "C37218": [
-        "L57824"
+      "C85814": [
+        "L11577",
+        "L57042"
       ]
     },
-    "userId": "U91125",
+    "userId": "U46383",
     "role": "Student",
-    "username": "abdo elsayed",
-    "email": "abdo@gmail.com",
+    "username": "dad",
+    "email": "dad@gmail.com",
     "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
   },
-  "U81712": {
-    "userId": "U81712",
+  "U70383": {
+    "userId": "U70383",
     "role": "Admin",
     "username": "moaz elsayed",
     "email": "moaz@gmail.com",
     "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
   },
-  "U24315": {
+  "U35166": {
     "createdCourses": [
-      "C37218",
-      "C11876"
+      "C85814"
     ],
-    "userId": "U24315",
+    "userId": "U35166",
     "role": "Instructor",
     "username": "ahmed elsayed",
     "email": "ahmed@gmail.com",
+    "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
+  },
+  "U82388": {
+    "userId": "U82388",
+    "role": "Admin",
+    "username": "abdo elsayed",
+    "email": "abdo@gmail.com",
     "passwordHash": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92"
   }
 }

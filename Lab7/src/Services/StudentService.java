@@ -34,13 +34,19 @@ public class StudentService {
 
 public List<Course> browseAvailableCourses() {
     
-  List<Course> approvedCourses = new ArrayList<>(); //lab 8
-        for (Course course : dbManager.getAllCourses()) {
-            if (course.getStatus() == Course.CourseStatus.APPROVED) {
+         List<Course> approvedCourses = new ArrayList<>();
+    for (Course course : dbManager.getAllCourses()) {
+        // Check if course is approved AND instructor exists
+        if (course.getStatus() == Course.CourseStatus.APPROVED) {
+            // Verify instructor exists
+            User instructor = dbManager.getUserById(course.getInstructorId());
+            if (instructor != null) {
                 approvedCourses.add(course);
             }
         }
-        return approvedCourses;}
+    }
+    return approvedCourses;
+}
   
 
 public boolean enrollInCourse(String courseId) {

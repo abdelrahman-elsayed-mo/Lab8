@@ -4,9 +4,12 @@
  */
 package FrontEnd;
 
+
 import BackEnd.Lesson;
+import BackEnd.Quiz;
 import FrontEnd.StudentDashboard;
 import Services.CourseService;
+import Services.QuizService;
 import Services.StudentService;
 import javax.swing.*;
 import java.awt.*;
@@ -18,17 +21,36 @@ public class LessonContent extends javax.swing.JPanel {
     private StudentDashboard parentDashboard;
     private CourseService courseService;
     private StudentService studentService;
+    private QuizService quizService;
 
     private Lesson currentLesson;
     private String currentCourseId;
+    private javax.swing.JLabel scoreValueLabel;
+    private javax.swing.JLabel attemptsValueLabel;
 
     public LessonContent(StudentDashboard parentDashboard, CourseService courseService, StudentService studentService) {
         this.parentDashboard = parentDashboard;
         this.courseService = courseService;
         this.studentService = studentService;
+        this.quizService = new QuizService(parentDashboard.getDbManager());
         initComponents();
+        createValueLabels();
+        Complete.setEnabled(false);
     }
-
+  private void createValueLabels() {
+        // Create labels for displaying the actual values
+        scoreValueLabel = new javax.swing.JLabel();
+        attemptsValueLabel = new javax.swing.JLabel();
+        
+        scoreValueLabel.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
+        scoreValueLabel.setForeground(new java.awt.Color(102, 102, 255));
+        
+        attemptsValueLabel.setFont(new java.awt.Font("Segoe UI", 1, 16)); // NOI18N
+        attemptsValueLabel.setForeground(new java.awt.Color(102, 102, 255));
+        
+        // Add them to the layout (you'll need to adjust your layout accordingly)
+        // This is a simplified version - you might need to adjust based on your exact layout
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -45,6 +67,9 @@ public class LessonContent extends javax.swing.JPanel {
         jList1 = new javax.swing.JList<>();
         Complete = new javax.swing.JButton();
         Back = new javax.swing.JButton();
+        StartQuiz = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 3, 18)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(102, 102, 255));
@@ -83,24 +108,51 @@ public class LessonContent extends javax.swing.JPanel {
             }
         });
 
+        StartQuiz.setBackground(new java.awt.Color(204, 204, 204));
+        StartQuiz.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        StartQuiz.setForeground(new java.awt.Color(102, 102, 255));
+        StartQuiz.setText("Start Quiz");
+        StartQuiz.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                StartQuizActionPerformed(evt);
+            }
+        });
+
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 3, 18)); // NOI18N
+        jLabel2.setForeground(new java.awt.Color(102, 102, 255));
+        jLabel2.setText("Highest score of Quiz:");
+        jLabel2.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        jLabel2.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+
+        jLabel3.setFont(new java.awt.Font("Segoe UI", 3, 18)); // NOI18N
+        jLabel3.setForeground(new java.awt.Color(102, 102, 255));
+        jLabel3.setText("Number of Attempts Left:");
+        jLabel3.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        jLabel3.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 690, Short.MAX_VALUE)
+            .addComponent(jScrollPane1)
             .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(24, 24, 24)
-                        .addComponent(Complete)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(271, 271, 271)
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(Back)))
+                .addGap(271, 271, 271)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 211, Short.MAX_VALUE)
+                .addComponent(Back)
                 .addContainerGap())
+            .addGroup(layout.createSequentialGroup()
+                .addGap(24, 24, 24)
+                .addComponent(Complete)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(StartQuiz, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(14, 14, 14))
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel3))
+                .addGap(0, 0, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -109,13 +161,19 @@ public class LessonContent extends javax.swing.JPanel {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(Back))
+                .addGap(45, 45, 45)
+                .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 198, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 38, Short.MAX_VALUE)
+                .addComponent(jLabel3)
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 94, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(Complete)
-                .addGap(52, 52, 52))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(Complete)
+                    .addComponent(StartQuiz))
+                .addGap(49, 49, 49))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -139,12 +197,45 @@ public class LessonContent extends javax.swing.JPanel {
        
     }//GEN-LAST:event_BackActionPerformed
 
+    private void StartQuizActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_StartQuizActionPerformed
+        // TODO add your handling code here:
+       if (currentLesson == null) {
+            JOptionPane.showMessageDialog(this, "No lesson loaded.");
+            return;
+        }
+        
+        if (currentLesson.getQuiz() == null) {
+            JOptionPane.showMessageDialog(this, "No quiz available for this lesson.");
+            return;
+        }
+        
+        // Check attempts before starting quiz
+        String studentId = parentDashboard.getStudentId();
+        String quizId = currentLesson.getQuiz().getQuizID();
+        int attemptsLeft = quizService.getRemainingAttempts(studentId, quizId);
+        
+        if (attemptsLeft <= 0) {
+            JOptionPane.showMessageDialog(this, 
+                "You have no attempts remaining for this quiz.\nMaximum attempts: " + 
+                currentLesson.getQuiz().getMaxAttempts(), 
+                "No Attempts Remaining", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Navigate to quiz panel
+        QuizPanel quizPanel = parentDashboard.getQuizPanel();
+        quizPanel.loadQuiz(currentCourseId, currentLesson.getLessonId(), currentLesson.getQuiz());
+        
+        CardLayout cl = (CardLayout) parentDashboard.getContentPanel().getLayout();
+        cl.show(parentDashboard.getContentPanel(), "quiz");
+    }//GEN-LAST:event_StartQuizActionPerformed
+
     public void loadLesson(String courseId, String lessonId) {
         this.currentCourseId = courseId;
         this.currentLesson = courseService.getLessonById(lessonId);
         if (currentLesson == null) return;
 
-        
         jLabel1.setText(currentLesson.getTitle());
         jTextArea1.setText(currentLesson.getContent());
 
@@ -154,15 +245,82 @@ public class LessonContent extends javax.swing.JPanel {
             listModel.addElement(res);
         }
         jList1.setModel(listModel);
+        
+        
+        updateQuizInfo();
+          if (currentLesson.getQuiz() == null) {
+            Complete.setEnabled(true);
+        }
     }
-
+    
+     private void updateQuizInfo() {
+    System.out.println("=== updateQuizInfo() START ===");
+    
+    if (currentLesson == null) {
+        System.out.println("ERROR: currentLesson is null");
+        return;
+    }
+    
+    if (currentLesson.getQuiz() == null) {
+        System.out.println("No quiz for this lesson");
+        // No quiz - student can complete the lesson immediately
+        jLabel2.setText("Highest score: No quiz");
+        jLabel3.setText("Attempts left: N/A");
+        StartQuiz.setEnabled(false);
+        Complete.setEnabled(true); // Can complete lesson without quiz
+        System.out.println("No quiz - Complete enabled: true");
+        return;
+    }
+    
+    // We have a quiz - get the data
+    Quiz quiz = currentLesson.getQuiz();
+    String studentId = parentDashboard.getStudentId();
+    String quizId = quiz.getQuizID();
+    
+    System.out.println("Processing quiz - Student: " + studentId + ", Quiz: " + quizId);
+    
+    // Get quiz data from service
+    Double bestScore = quizService.getBestScore(studentId, quizId);
+    int attemptsLeft = quizService.getRemainingAttempts(studentId, quizId);
+    int totalAttemptsUsed = quiz.getMaxAttempts() - attemptsLeft;
+    
+    System.out.println("Service returned - BestScore: " + bestScore + ", AttemptsLeft: " + attemptsLeft);
+    
+    // Update labels
+    String scoreText = (bestScore != null) ? String.format("%.1f%%", bestScore) : "Not taken";
+    jLabel2.setText("Highest score: " + scoreText);
+    jLabel3.setText("Attempts left: " + attemptsLeft);
+    
+    // NEW LOGIC: Enable Complete button only if:
+    // - There's no quiz OR
+    // - There is a quiz AND student has at least one attempt (regardless of score)
+    boolean canCompleteLesson = (bestScore != null) || (totalAttemptsUsed > 0);
+    
+    // Enable Start Quiz button if there are attempts left
+    boolean canStartQuiz = (attemptsLeft > 0);
+    
+    StartQuiz.setEnabled(canStartQuiz);
+    Complete.setEnabled(canCompleteLesson);
+    
+    System.out.println("Final state - StartQuiz enabled: " + canStartQuiz + 
+                      ", Complete enabled: " + canCompleteLesson +
+                      ", Attempts used: " + totalAttemptsUsed);
+    System.out.println("=== updateQuizInfo() END ===");
+    
+    // Refresh UI
+    revalidate();
+    repaint();
+}
  
         
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Back;
     private javax.swing.JButton Complete;
+    private javax.swing.JButton StartQuiz;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JList<String> jList1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;

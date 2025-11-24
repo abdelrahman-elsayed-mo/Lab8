@@ -6,6 +6,7 @@ package FrontEnd;
 
 import BackEnd.Lesson;
 import Services.CourseService;
+import Services.QuizService;
 import Services.StudentService;
 import java.awt.CardLayout;
 import javax.swing.*;
@@ -18,7 +19,7 @@ public class Lessons extends javax.swing.JPanel {
 
     private StudentDashboard parentDashboard;
     private CourseService courseService;
-    
+    private QuizService quizService;
      private StudentService studentService;
      
    private String courseId1;
@@ -33,6 +34,7 @@ public class Lessons extends javax.swing.JPanel {
         this.parentDashboard = parentDashboard;
         this.courseService = courseService;
         this.studentService = studentService;
+        this.quizService = new QuizService(parentDashboard.getDbManager());
         this.courseId1=courseId1;
         initComponents();
         setupListeners(); 
@@ -62,17 +64,17 @@ public class Lessons extends javax.swing.JPanel {
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null},
+                {null, null, null, null, null}
             },
             new String [] {
-                "Lesson Id", "Title", "Status"
+                "Lesson Id", "Title", "Status", "pass/fail", "best score"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -168,14 +170,8 @@ private void setupListeners() {
                 int row = jTable1.getSelectedRow();
                 if (row >= 0) {
                     String lessonId = jTable1.getValueAt(row, 0).toString();
-                   // String courseIdStr = courseId.getText();
-                    
-                    
-                   //
-                    
+               
                     LessonContent lessonContent = parentDashboard.getLessonContentPanel();
-                    
-                    
                     if (lessonContent == null) {
                         JOptionPane.showMessageDialog(Lessons.this, 
                             "Lesson content panel not available. Please try again.");
@@ -203,39 +199,53 @@ private void setupListeners() {
     private javax.swing.JTable jTable1;
     // End of variables declaration//GEN-END:variables
 
+   
     void loadlessons(String courseid) {
-       
-    
-
         List<Lesson> lessons = courseService.getCourseLessons(courseid);
-
         List<String> status = studentService.getCompletedLessons(courseid);
         
-        Object[][] data = new Object[lessons.size()][3];
+        Object[][] data = new Object[lessons.size()][5]; 
         for (int i = 0; i < lessons.size(); i++) {
-             Lesson currentLesson = lessons.get(i);
-        String currentLessonId = currentLesson.getLessonId();
-            data[i][0] =  currentLessonId;
+            Lesson currentLesson = lessons.get(i);
+            String currentLessonId = currentLesson.getLessonId();
+            
+            data[i][0] = currentLessonId;
             data[i][1] = currentLesson.getTitle();
-            
-            
-            if(status.contains(currentLessonId)){
-            data[i][2] = "Completed";
-        } else {
-            data[i][2] = "Incomplete";
+          
+            if(status.contains(currentLessonId)) {
+                data[i][2] = "Completed";
+            } else {
+                data[i][2] = "Incomplete";
+            }
+            if (currentLesson.getQuiz() != null) {
+                String quizId = currentLesson.getQuiz().getQuizID();
+                Double bestScore = quizService.getBestScore(parentDashboard.getStudentId(), quizId);
+                
+                if (bestScore != null) {
+                    data[i][3] = bestScore >= 50 ? "Pass" : "Fail";
+                    data[i][4] = String.format("%.1f%%", bestScore);
+                } else {
+                    data[i][3] = "Not Taken";
+                    data[i][4] = "N/A";
+                }
+            } else {
+                data[i][3] = "No Quiz";
+                data[i][4] = "N/A";
+            }
         }
-        }
-                DefaultTableModel model = new DefaultTableModel(data, new String[]{"Lesson ID", "Title","Status"}) {
+        
+        DefaultTableModel model = new DefaultTableModel(data, 
+            new String[]{"Lesson ID", "Title", "Status", "Pass/Fail", "Best Score"}) {
             @Override
             public boolean isCellEditable(int row, int column) { 
                 return false; 
             }
         };
-               double progress = studentService.getCourseProgress(courseid);
-               String progressFormat = String.format("%.2f", progress);
+        
+        double progress = studentService.getCourseProgress(courseid);
+        String progressFormat = String.format("%.2f", progress);
         jTable1.setModel(model); 
         jLabel2.setText("Progress : "+ progressFormat+"%" );
-        
     }
 
     }

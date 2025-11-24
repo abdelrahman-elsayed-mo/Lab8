@@ -3,27 +3,32 @@ package FrontEnd;
 import Services.*;
 import BackEnd.*;
 import databse.*;
+import Quiz.Question;
+import Utils.IdGenerator;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.*;
 
 public class InstructorDashboard extends JFrame {
-    
+
     private String currentInstructorId;
     private JsonDatabaseManager dbManager;
     private InstructorService instructorService;
-    
+
     private JTable coursesTable;
     private JTable lessonsTable;
     private JTable studentsTable;
+    private JTable quizTable;
     private DefaultTableModel coursesTableModel;
     private DefaultTableModel lessonsTableModel;
     private DefaultTableModel studentsTableModel;
+    private DefaultTableModel quizTableModel;
 
     private JButton createCourseButton;
     private JButton editCourseButton;
@@ -34,11 +39,24 @@ public class InstructorDashboard extends JFrame {
     private JButton viewStudentsButton;
     private JButton logoutButton;
 
+    // Quiz Management Buttons
+    private JButton createQuizButton;
+    private JButton editQuizButton;
+    private JButton deleteQuizButton;
+    private JButton addQuestionButton;
+    private JButton removeQuestionButton;
+    private JButton editQuestionButton;
+
+    // Selection components for quizzes
+    private JComboBox<String> courseCombo;
+    private JComboBox<String> lessonCombo;
+    private Map<String, Course> courseMap;
+    private Map<String, Lesson> lessonMap;
+
     public InstructorDashboard(JsonDatabaseManager dbManager, String instructorId) {
         this.currentInstructorId = instructorId;
         this.dbManager = dbManager;
-        
-      
+
         User currentUser = dbManager.getUserById(instructorId);
         if (currentUser instanceof Instructor) {
             this.instructorService = new InstructorService(dbManager, currentUser);
@@ -46,11 +64,11 @@ public class InstructorDashboard extends JFrame {
             JOptionPane.showMessageDialog(this, "Error: User is not an instructor");
             System.exit(1);
         }
-        
         initializeUI();
         loadInstructorCourses();
         loadAllLessons();
         loadEnrolledStudents();
+        initializeQuizComponents();
     }
 
     private void initializeUI() {
@@ -59,35 +77,525 @@ public class InstructorDashboard extends JFrame {
         setSize(1200, 800);
         setLocationRelativeTo(null);
 
-        
         JTabbedPane tabbedPane = new JTabbedPane();
 
-        
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(new Color(70, 130, 180));
         headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        
+
         JLabel titleLabel = new JLabel("Instructor Dashboard");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         titleLabel.setForeground(Color.WHITE);
-        
+
         logoutButton = new JButton("Logout");
         logoutButton.addActionListener(e -> logout());
-        
+
         headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(logoutButton, BorderLayout.EAST);
 
-        
         tabbedPane.addTab("My Courses", createCoursesPanel());
         tabbedPane.addTab("All Lessons", createLessonsPanel());
         tabbedPane.addTab("Enrolled Students", createStudentsPanel());
+        tabbedPane.addTab("Quiz Management", createQuizManagementPanel());
 
-        
         setLayout(new BorderLayout());
         add(headerPanel, BorderLayout.NORTH);
         add(tabbedPane, BorderLayout.CENTER);
     }
-    
+
+    private JPanel createQuizManagementPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JPanel selectionPanel = new JPanel(new GridLayout(2, 2, 5, 5));
+        selectionPanel.setBorder(BorderFactory.createTitledBorder("Select Course and Lesson"));
+
+        selectionPanel.add(new JLabel("Course:"));
+        courseCombo = new JComboBox<>();
+        selectionPanel.add(courseCombo);
+
+        selectionPanel.add(new JLabel("Lesson:"));
+        lessonCombo = new JComboBox<>();
+        selectionPanel.add(lessonCombo);
+
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(e -> refreshQuizData());
+
+        JPanel topPanel = new JPanel(new BorderLayout());
+        topPanel.add(selectionPanel, BorderLayout.CENTER);
+        topPanel.add(refreshButton, BorderLayout.EAST);
+
+        String[] columns = {"Question ID", "Content", "Correct Answer", "Options"};
+        quizTableModel = new DefaultTableModel(columns, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        quizTable = new JTable(quizTableModel);
+        quizTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane quizScrollPane = new JScrollPane(quizTable);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout());
+        createQuizButton = new JButton("Create Quiz");
+        editQuizButton = new JButton("Edit Quiz");
+        deleteQuizButton = new JButton("Delete Quiz");
+        addQuestionButton = new JButton("Add Question");
+        removeQuestionButton = new JButton("Remove Question");
+        editQuestionButton = new JButton("Edit Question");
+
+        buttonPanel.add(createQuizButton);
+        buttonPanel.add(editQuizButton);
+        buttonPanel.add(deleteQuizButton);
+        buttonPanel.add(addQuestionButton);
+        buttonPanel.add(removeQuestionButton);
+        buttonPanel.add(editQuestionButton);
+
+        createQuizButton.addActionListener(e -> createQuiz());
+        editQuizButton.addActionListener(e -> editQuiz());
+        deleteQuizButton.addActionListener(e -> deleteQuiz());
+        addQuestionButton.addActionListener(e -> addQuestion());
+        removeQuestionButton.addActionListener(e -> removeQuestion());
+        editQuestionButton.addActionListener(e -> editQuestion());
+
+        courseCombo.addActionListener(e -> updateLessonCombo());
+
+        panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(quizScrollPane, BorderLayout.CENTER);
+        panel.add(buttonPanel, BorderLayout.SOUTH);
+
+        return panel;
+    }
+
+    private void initializeQuizComponents() {
+        refreshCourseCombo();
+        updateLessonCombo();
+        refreshQuizData();
+    }
+
+    private void refreshCourseCombo() {
+        courseCombo.removeAllItems();
+        courseMap = new HashMap<>();
+
+        List<Course> instructorCourses = getInstructorCourses();
+        for (Course course : instructorCourses) {
+            String display = course.getTitle() + " (" + course.getCourseId() + ")";
+            courseCombo.addItem(display);
+            courseMap.put(display, course);
+        }
+    }
+
+    private void updateLessonCombo() {
+        lessonCombo.removeAllItems();
+        lessonMap = new HashMap<>();
+
+        String selectedCourse = (String) courseCombo.getSelectedItem();
+        if (selectedCourse != null) {
+            Course course = courseMap.get(selectedCourse);
+            if (course != null) {
+                for (Lesson lesson : course.getLessons()) {
+                    String display = lesson.getTitle() + " (" + lesson.getLessonId() + ")";
+                    lessonCombo.addItem(display);
+                    lessonMap.put(display, lesson);
+                }
+            }
+        }
+        refreshQuizData();
+    }
+
+    private void refreshQuizData() {
+        quizTableModel.setRowCount(0);
+
+        String selectedLesson = (String) lessonCombo.getSelectedItem();
+        if (selectedLesson != null) {
+            Lesson lesson = lessonMap.get(selectedLesson);
+            if (lesson != null && lesson.getQuiz() != null) {
+                Quiz quiz = lesson.getQuiz();
+                for (Question question : quiz.getQuestions()) {
+                    String options = String.join(", ", question.getOptions());
+                    quizTableModel.addRow(new Object[]{
+                        question.getQuestionId(),
+                        question.getContent(),
+                        question.getCorrectAnswer(),
+                        options
+                    });
+                }
+            }
+        }
+        updateButtonStates();
+    }
+
+    private void updateButtonStates() {
+        String selectedLesson = (String) lessonCombo.getSelectedItem();
+        boolean hasLesson = selectedLesson != null;
+        boolean hasQuiz = false;
+        boolean hasQuestions = false;
+
+        if (hasLesson) {
+            Lesson lesson = lessonMap.get(selectedLesson);
+            hasQuiz = lesson != null && lesson.getQuiz() != null;
+            if (hasQuiz) {
+                hasQuestions = !lesson.getQuiz().getQuestions().isEmpty();
+            }
+        }
+
+        createQuizButton.setEnabled(hasLesson && !hasQuiz);
+        editQuizButton.setEnabled(hasQuiz);
+        deleteQuizButton.setEnabled(hasQuiz);
+        addQuestionButton.setEnabled(hasQuiz);
+        removeQuestionButton.setEnabled(hasQuiz && hasQuestions);
+        editQuestionButton.setEnabled(hasQuiz && hasQuestions);
+    }
+
+    private void createQuiz() {
+        String selectedLesson = (String) lessonCombo.getSelectedItem();
+        if (selectedLesson == null) {
+            JOptionPane.showMessageDialog(this, "Please select a lesson first.");
+            return;
+        }
+        Lesson lesson = lessonMap.get(selectedLesson);
+        Course course = findCourseByLesson(lesson.getLessonId());
+
+        JTextField titleField = new JTextField(20);
+        Object[] message = {   "Quiz Title:", titleField };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Create Quiz",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            String title = titleField.getText().trim();
+            if (title.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Quiz title cannot be empty!");
+                return;
+            }
+
+            List<Question> questions = new ArrayList<>();
+
+            boolean success = instructorService.createQuiz( course.getCourseId(),lesson.getLessonId(),title,questions );
+            
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Quiz created successfully!");
+                refreshQuizData();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to create quiz.");
+            }
+        }
+    }
+
+    private void editQuiz() {
+        String selectedLesson = (String) lessonCombo.getSelectedItem();
+        if (selectedLesson == null) {
+            JOptionPane.showMessageDialog(this, "Please select a lesson first.");
+            return;
+        }
+        Lesson lesson = lessonMap.get(selectedLesson);
+        if (lesson.getQuiz() == null) {
+            JOptionPane.showMessageDialog(this, "No quiz found for this lesson.");
+            return;
+        }
+        Quiz quiz = lesson.getQuiz();
+        Course course = findCourseByLesson(lesson.getLessonId());
+
+        JTextField titleField = new JTextField(quiz.getName(), 20);
+        Object[] message = {
+            "Quiz Title:", titleField
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Edit Quiz",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            String title = titleField.getText().trim();
+            if (title.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Quiz title cannot be empty!");
+                return;
+            }
+
+            boolean success = instructorService.editQuiz(
+                    course.getCourseId(),
+                    lesson.getLessonId(),
+                    quiz.getQuizID(),
+                    title,
+                    quiz.getQuestions()
+            );
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Quiz updated successfully!");
+                refreshQuizData();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update quiz.");
+            }
+        }
+    }
+
+    private void deleteQuiz() {
+        String selectedLesson = (String) lessonCombo.getSelectedItem();
+        if (selectedLesson == null) {
+            JOptionPane.showMessageDialog(this, "Please select a lesson first.");
+            return;
+        }
+
+        Lesson lesson = lessonMap.get(selectedLesson);
+        if (lesson.getQuiz() == null) {
+            JOptionPane.showMessageDialog(this, "No quiz found for this lesson.");
+            return;
+        }
+        Quiz quiz = lesson.getQuiz();
+        Course course = findCourseByLesson(lesson.getLessonId());
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to delete the quiz: " + quiz.getName() + "?",
+                "Confirm Delete", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean success = instructorService.deleteQuiz(
+                    course.getCourseId(),
+                    lesson.getLessonId(),
+                    quiz.getQuizID()
+            );
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Quiz deleted successfully!");
+                refreshQuizData();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to delete quiz.");
+            }
+        }
+    }
+
+    private void addQuestion() {
+         String selectedLesson = (String) lessonCombo.getSelectedItem();
+    if (selectedLesson == null) {
+        JOptionPane.showMessageDialog(this, "Please select a lesson first.");
+        return;
+    }
+
+    Lesson lesson = lessonMap.get(selectedLesson);
+    if (lesson == null || lesson.getQuiz() == null) {
+        JOptionPane.showMessageDialog(this, "No quiz found for this lesson. Create a quiz first.");
+        return;
+    }
+
+    Course course = findCourseByLesson(lesson.getLessonId());
+    if (course == null) {
+        JOptionPane.showMessageDialog(this, "Course not found.");
+        return;
+    }
+
+    JTextField contentField = new JTextField(30);
+    JTextField correctAnswerField = new JTextField(20);
+    JTextArea optionsArea = new JTextArea(5, 30);
+    optionsArea.setLineWrap(true);
+    JScrollPane optionsScroll = new JScrollPane(optionsArea);
+    optionsArea.setToolTipText("Enter one option per line");
+
+    Object[] message = {
+        "Question Content:", contentField,
+        "Correct Answer:", correctAnswerField,
+        "Options (one per line):", optionsScroll
+    };
+
+    int option = JOptionPane.showConfirmDialog(this, message, "Add Question",
+            JOptionPane.OK_CANCEL_OPTION);
+
+    if (option == JOptionPane.OK_OPTION) {
+        String content = contentField.getText().trim();
+        String correctAnswer = correctAnswerField.getText().trim();
+        String optionsText = optionsArea.getText().trim();
+
+        if (content.isEmpty() || correctAnswer.isEmpty() || optionsText.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "All fields are required!");
+            return;
+        }
+
+        // Parse options
+        ArrayList<String> options = new ArrayList<>();
+        String[] optionsArray = optionsText.split("\\r?\\n");
+        for (String opt : optionsArray) {
+            String trimmedOpt = opt.trim();
+            if (!trimmedOpt.isEmpty()) {
+                options.add(trimmedOpt);
+            }
+        }
+
+        // Validate that correct answer is in options
+        if (!options.contains(correctAnswer)) {
+            JOptionPane.showMessageDialog(this, 
+                "Correct answer must be one of the options!");
+            return;
+        }
+
+        try {
+            String questionId = new IdGenerator().generateQuestionId();
+            Question newQuestion = new Question(questionId, content, correctAnswer, options);
+
+            boolean success = instructorService.addQuestionToQuiz(
+                    course.getCourseId(),
+                    lesson.getLessonId(),
+                    newQuestion
+            );
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Question added successfully!");
+                refreshQuizData();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add question. Check console for details.");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error adding question: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    }
+
+    private void removeQuestion() {
+        int selectedRow = quizTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a question to remove.");
+            return;
+        }
+
+        String selectedLesson = (String) lessonCombo.getSelectedItem();
+        if (selectedLesson == null) {
+            JOptionPane.showMessageDialog(this, "Please select a lesson first.");
+            return;
+        }
+
+        Lesson lesson = lessonMap.get(selectedLesson);
+        if (lesson.getQuiz() == null) {
+            JOptionPane.showMessageDialog(this, "No quiz found for this lesson.");
+            return;
+        }
+
+        Course course = findCourseByLesson(lesson.getLessonId());
+        String questionId = (String) quizTableModel.getValueAt(selectedRow, 0);
+        
+        Question questionToRemove = null;
+        for (Question q : lesson.getQuiz().getQuestions()) {
+            if (q.getQuestionId().equals(questionId)) {
+                questionToRemove = q;
+                break;
+            }
+        }
+
+        if (questionToRemove == null) {
+            JOptionPane.showMessageDialog(this, "Question not found.");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to remove this question?",
+                "Confirm Remove", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean success = instructorService.removeQuestionFromQuiz(
+                    course.getCourseId(),
+                    lesson.getLessonId(),
+                    questionToRemove
+            );
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Question removed successfully!");
+                refreshQuizData();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to remove question.");
+            }
+        }
+    }
+
+    private void editQuestion() {
+        int selectedRow = quizTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a question to edit.");
+            return;
+        }
+
+        String selectedLesson = (String) lessonCombo.getSelectedItem();
+        if (selectedLesson == null) {
+            JOptionPane.showMessageDialog(this, "Please select a lesson first.");
+            return;
+        }
+
+        Lesson lesson = lessonMap.get(selectedLesson);
+        if (lesson.getQuiz() == null) {
+            JOptionPane.showMessageDialog(this, "No quiz found for this lesson.");
+            return;
+        }
+
+        Course course = findCourseByLesson(lesson.getLessonId());
+        String questionId = (String) quizTableModel.getValueAt(selectedRow, 0);
+
+        Question questionToEdit = null;
+        for (Question q : lesson.getQuiz().getQuestions()) {
+            if (q.getQuestionId().equals(questionId)) {
+                questionToEdit = q;
+                break;
+            }
+        }
+
+        if (questionToEdit == null) {
+            JOptionPane.showMessageDialog(this, "Question not found.");
+            return;
+        }
+
+        JTextField contentField = new JTextField(questionToEdit.getContent(), 30);
+        JTextField correctAnswerField = new JTextField(questionToEdit.getCorrectAnswer(), 20);
+        JTextArea optionsArea = new JTextArea(5, 30);
+        optionsArea.setLineWrap(true);
+        JScrollPane optionsScroll = new JScrollPane(optionsArea);
+
+        StringBuilder optionsText = new StringBuilder();
+        for (String option : questionToEdit.getOptions()) {
+            optionsText.append(option).append("\n");
+        }
+        optionsArea.setText(optionsText.toString());
+        optionsArea.setToolTipText("Enter one option per line");
+
+        Object[] message = {
+            "Question Content:", contentField,
+            "Correct Answer:", correctAnswerField,
+            "Options (one per line):", optionsScroll
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Edit Question",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            String content = contentField.getText().trim();
+            String correctAnswer = correctAnswerField.getText().trim();
+            String newOptionsText = optionsArea.getText().trim();
+
+            if (content.isEmpty() || correctAnswer.isEmpty() || newOptionsText.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "All fields are required!");
+                return;
+            }
+
+            List<String> newOptions = new ArrayList<>();
+            String[] optionsArray = newOptionsText.split("\\r?\\n");
+            for (String opt : optionsArray) {
+                if (!opt.trim().isEmpty()) {
+                    newOptions.add(opt.trim());
+                }
+            }
+
+            boolean success = instructorService.updateQuestionInQuiz(
+                    course.getCourseId(),
+                    lesson.getLessonId(),
+                    questionId,
+                    content,
+                    correctAnswer,
+                    newOptions
+            );
+
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Question updated successfully!");
+                refreshQuizData();
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update question.");
+            }
+        }
+    }
+
     private JPanel createCoursesPanel() {
         JPanel panel = new JPanel(new BorderLayout());
 
@@ -174,7 +682,7 @@ public class InstructorDashboard extends JFrame {
     private void loadInstructorCourses() {
         coursesTableModel.setRowCount(0);
         Collection<Course> allCourses = dbManager.getAllCourses();
-        
+
         for (Course course : allCourses) {
             if (course.getInstructorId().equals(currentInstructorId)) {
                 int studentCount = course.getStudents().size();
@@ -193,12 +701,12 @@ public class InstructorDashboard extends JFrame {
     private void loadAllLessons() {
         lessonsTableModel.setRowCount(0);
         Collection<Course> allCourses = dbManager.getAllCourses();
-        
+
         for (Course course : allCourses) {
             if (course.getInstructorId().equals(currentInstructorId)) {
                 for (Lesson lesson : course.getLessons()) {
-                    String contentPreview = lesson.getContent().length() > 50 ? 
-                        lesson.getContent().substring(0, 50) + "..." : lesson.getContent();
+                    String contentPreview = lesson.getContent().length() > 50
+                            ? lesson.getContent().substring(0, 50) + "..." : lesson.getContent();
                     lessonsTableModel.addRow(new Object[]{
                         lesson.getLessonId(),
                         lesson.getTitle(),
@@ -214,18 +722,18 @@ public class InstructorDashboard extends JFrame {
         studentsTableModel.setRowCount(0);
         Collection<Course> allCourses = dbManager.getAllCourses();
         List<Student> allStudents = getAllStudents();
-        
+
         for (Course course : allCourses) {
             if (course.getInstructorId().equals(currentInstructorId)) {
                 for (String studentId : course.getStudents()) {
                     Student student = findStudentById(allStudents, studentId);
                     if (student != null) {
-                        
+
                         int totalLessons = course.getLessons().size();
                         int completedLessons = student.getCompletedLessons(course.getCourseId()).size();
-                        String progress = totalLessons > 0 ? 
-                            (completedLessons * 100 / totalLessons) + "%" : "0%";
-                        
+                        String progress = totalLessons > 0
+                                ? (completedLessons * 100 / totalLessons) + "%" : "0%";
+
                         studentsTableModel.addRow(new Object[]{
                             student.getUserId(),
                             student.getUsername(),
@@ -250,13 +758,13 @@ public class InstructorDashboard extends JFrame {
             "Course Description:", descriptionScroll
         };
 
-        int option = JOptionPane.showConfirmDialog(this, message, "Create New Course", 
-            JOptionPane.OK_CANCEL_OPTION);
-        
+        int option = JOptionPane.showConfirmDialog(this, message, "Create New Course",
+                JOptionPane.OK_CANCEL_OPTION);
+
         if (option == JOptionPane.OK_OPTION) {
             String title = titleField.getText().trim();
             String description = descriptionArea.getText().trim();
-            
+
             if (title.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Course title cannot be empty!");
                 return;
@@ -296,13 +804,13 @@ public class InstructorDashboard extends JFrame {
             "Course Description:", descriptionScroll
         };
 
-        int option = JOptionPane.showConfirmDialog(this, message, "Edit Course", 
-            JOptionPane.OK_CANCEL_OPTION);
-        
+        int option = JOptionPane.showConfirmDialog(this, message, "Edit Course",
+                JOptionPane.OK_CANCEL_OPTION);
+
         if (option == JOptionPane.OK_OPTION) {
             String title = titleField.getText().trim();
             String description = descriptionArea.getText().trim();
-            
+
             if (title.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Course title cannot be empty!");
                 return;
@@ -317,7 +825,7 @@ public class InstructorDashboard extends JFrame {
             }
         }
     }
-    
+
     private void deleteCourse() {
         int selectedRow = coursesTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -333,8 +841,8 @@ public class InstructorDashboard extends JFrame {
         }
 
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Are you sure you want to delete the course: " + course.getTitle() + "?\nThis will also delete all associated lessons.",
-            "Confirm Delete", JOptionPane.YES_NO_OPTION);
+                "Are you sure you want to delete the course: " + course.getTitle() + "?\nThis will also delete all associated lessons.",
+                "Confirm Delete", JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
             boolean success = instructorService.deleteCourse(courseId);
@@ -350,163 +858,154 @@ public class InstructorDashboard extends JFrame {
     }
 
     private void addLesson() {
-    List<Course> instructorCourses = getInstructorCourses();
-    if (instructorCourses.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "Please create a course first before adding lessons.");
-        return;
-    }
-
-    
-    JComboBox<String> courseCombo = new JComboBox<>();
-    Map<String, Course> courseMap = new HashMap<>();
-    for (Course course : instructorCourses) {
-        courseCombo.addItem(course.getTitle() + " (" + course.getCourseId() + ")");
-        courseMap.put(course.getTitle() + " (" + course.getCourseId() + ")", course);
-    }
-
-    JTextField titleField = new JTextField();
-    JTextArea contentArea = new JTextArea(10, 30);
-    contentArea.setLineWrap(true);
-    JScrollPane contentScroll = new JScrollPane(contentArea);
-    
-    
-    JTextArea resourcesArea = new JTextArea(3, 30);
-    resourcesArea.setLineWrap(true);
-    JScrollPane resourcesScroll = new JScrollPane(resourcesArea);
-    resourcesArea.setToolTipText("Enter one resource per line (URLs, file names, etc.)");
-
-    Object[] message = {
-        "Select Course:", courseCombo,
-        "Lesson Title:", titleField,
-        "Lesson Content:", contentScroll,
-        "Resources (one per line):", resourcesScroll  
-    };
-
-    int option = JOptionPane.showConfirmDialog(this, message, "Add New Lesson", 
-        JOptionPane.OK_CANCEL_OPTION);
-    
-    if (option == JOptionPane.OK_OPTION) {
-        String title = titleField.getText().trim();
-        String content = contentArea.getText().trim();
-        String resourcesText = resourcesArea.getText().trim();  // ✅ GET RESOURCES
-        Course selectedCourse = courseMap.get(courseCombo.getSelectedItem());
-        
-        if (title.isEmpty() || content.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Title and content cannot be empty!");
+        List<Course> instructorCourses = getInstructorCourses();
+        if (instructorCourses.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please create a course first before adding lessons.");
             return;
         }
 
-        if (selectedCourse == null) {
-            JOptionPane.showMessageDialog(this, "Please select a valid course.");
-            return;
+        JComboBox<String> courseCombo = new JComboBox<>();
+        Map<String, Course> courseMap = new HashMap<>();
+        for (Course course : instructorCourses) {
+            courseCombo.addItem(course.getTitle() + " (" + course.getCourseId() + ")");
+            courseMap.put(course.getTitle() + " (" + course.getCourseId() + ")", course);
         }
 
-        Lesson newLesson = instructorService.addLesson(selectedCourse.getCourseId(), title, content);
-        
-       
-        if (newLesson != null && !resourcesText.isEmpty()) {
-            String[] resourcesArray = resourcesText.split("\\r?\\n");
-            for (String resource : resourcesArray) {
-                if (!resource.trim().isEmpty()) {
-                    newLesson.addResource(resource.trim());
-                }
+        JTextField titleField = new JTextField();
+        JTextArea contentArea = new JTextArea(10, 30);
+        contentArea.setLineWrap(true);
+        JScrollPane contentScroll = new JScrollPane(contentArea);
+
+        JTextArea resourcesArea = new JTextArea(3, 30);
+        resourcesArea.setLineWrap(true);
+        JScrollPane resourcesScroll = new JScrollPane(resourcesArea);
+        resourcesArea.setToolTipText("Enter one resource per line (URLs, file names, etc.)");
+
+        Object[] message = {
+            "Select Course:", courseCombo,
+            "Lesson Title:", titleField,
+            "Lesson Content:", contentScroll,
+            "Resources (one per line):", resourcesScroll
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Add New Lesson",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            String title = titleField.getText().trim();
+            String content = contentArea.getText().trim();
+            String resourcesText = resourcesArea.getText().trim();  // ✅ GET RESOURCES
+            Course selectedCourse = courseMap.get(courseCombo.getSelectedItem());
+
+            if (title.isEmpty() || content.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Title and content cannot be empty!");
+                return;
             }
-            
-            dbManager.saveCourse(selectedCourse); 
-        }
-        
-        if (newLesson != null) {
-            loadAllLessons();
-            loadInstructorCourses(); 
-            JOptionPane.showMessageDialog(this, "Lesson added successfully!");
-        } else {
-            JOptionPane.showMessageDialog(this, "Failed to add lesson.");
-        }
-    }
-}
-   private void editLesson() {
-    int selectedRow = lessonsTable.getSelectedRow();
-    if (selectedRow == -1) {
-        JOptionPane.showMessageDialog(this, "Please select a lesson to edit.");
-        return;
-    }
 
-    String lessonId = (String) lessonsTableModel.getValueAt(selectedRow, 0);
-    Lesson lesson = findLessonById(lessonId);
-    if (lesson == null) {
-        JOptionPane.showMessageDialog(this, "Lesson not found!");
-        return;
-    }
+            if (selectedCourse == null) {
+                JOptionPane.showMessageDialog(this, "Please select a valid course.");
+                return;
+            }
 
-    
-    Course lessonCourse = findCourseByLesson(lessonId);
-    if (lessonCourse == null) {
-        JOptionPane.showMessageDialog(this, "Could not find the course for this lesson.");
-        return;
-    }
+            Lesson newLesson = instructorService.addLesson(selectedCourse.getCourseId(), title, content);
 
-    JTextField titleField = new JTextField(lesson.getTitle());
-    JTextArea contentArea = new JTextArea(lesson.getContent(), 10, 30);
-    contentArea.setLineWrap(true);
-    JScrollPane contentScroll = new JScrollPane(contentArea);
-    
- 
-    JTextArea resourcesArea = new JTextArea(3, 30);
-    resourcesArea.setLineWrap(true);
-    JScrollPane resourcesScroll = new JScrollPane(resourcesArea);
-    
-   
-    StringBuilder existingResources = new StringBuilder();
-    for (String resource : lesson.getResources()) {
-        existingResources.append(resource).append("\n");
-    }
-    resourcesArea.setText(existingResources.toString());
-    resourcesArea.setToolTipText("Enter one resource per line (URLs, file names, etc.)");
-
-    Object[] message = {
-        "Lesson Title:", titleField,
-        "Lesson Content:", contentScroll,
-        "Resources (one per line):", resourcesScroll  
-    };
-
-    int option = JOptionPane.showConfirmDialog(this, message, "Edit Lesson", 
-        JOptionPane.OK_CANCEL_OPTION);
-    
-    if (option == JOptionPane.OK_OPTION) {
-        String title = titleField.getText().trim();
-        String content = contentArea.getText().trim();
-        String resourcesText = resourcesArea.getText().trim();  
-        
-        if (title.isEmpty() || content.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Title and content cannot be empty!");
-            return;
-        }
-
-       
-        lesson.setTitle(title);
-        lesson.setContent(content);
-        
-       
-        lesson.getResources().clear();
-        if (!resourcesText.isEmpty()) {
-            String[] resourcesArray = resourcesText.split("\\r?\\n");
-            for (String resource : resourcesArray) {
-                if (!resource.trim().isEmpty()) {
-                    lesson.addResource(resource.trim());
+            if (newLesson != null && !resourcesText.isEmpty()) {
+                String[] resourcesArray = resourcesText.split("\\r?\\n");
+                for (String resource : resourcesArray) {
+                    if (!resource.trim().isEmpty()) {
+                        newLesson.addResource(resource.trim());
+                    }
                 }
+
+                dbManager.saveCourse(selectedCourse);
+            }
+
+            if (newLesson != null) {
+                loadAllLessons();
+                loadInstructorCourses();
+                JOptionPane.showMessageDialog(this, "Lesson added successfully!");
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to add lesson.");
             }
         }
-        
-        
-        boolean success = dbManager.saveCourse(lessonCourse);
-        if (success) {
-            loadAllLessons();
-            JOptionPane.showMessageDialog(this, "Lesson updated successfully!");
-        } else {
-            JOptionPane.showMessageDialog(this, "Failed to update lesson.");
+    }
+    private void editLesson() {
+        int selectedRow = lessonsTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a lesson to edit.");
+            return;
+        }
+
+        String lessonId = (String) lessonsTableModel.getValueAt(selectedRow, 0);
+        Lesson lesson = findLessonById(lessonId);
+        if (lesson == null) {
+            JOptionPane.showMessageDialog(this, "Lesson not found!");
+            return;
+        }
+
+        Course lessonCourse = findCourseByLesson(lessonId);
+        if (lessonCourse == null) {
+            JOptionPane.showMessageDialog(this, "Could not find the course for this lesson.");
+            return;
+        }
+
+        JTextField titleField = new JTextField(lesson.getTitle());
+        JTextArea contentArea = new JTextArea(lesson.getContent(), 10, 30);
+        contentArea.setLineWrap(true);
+        JScrollPane contentScroll = new JScrollPane(contentArea);
+
+        JTextArea resourcesArea = new JTextArea(3, 30);
+        resourcesArea.setLineWrap(true);
+        JScrollPane resourcesScroll = new JScrollPane(resourcesArea);
+
+        StringBuilder existingResources = new StringBuilder();
+        for (String resource : lesson.getResources()) {
+            existingResources.append(resource).append("\n");
+        }
+        resourcesArea.setText(existingResources.toString());
+        resourcesArea.setToolTipText("Enter one resource per line (URLs, file names, etc.)");
+
+        Object[] message = {
+            "Lesson Title:", titleField,
+            "Lesson Content:", contentScroll,
+            "Resources (one per line):", resourcesScroll
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, message, "Edit Lesson",
+                JOptionPane.OK_CANCEL_OPTION);
+
+        if (option == JOptionPane.OK_OPTION) {
+            String title = titleField.getText().trim();
+            String content = contentArea.getText().trim();
+            String resourcesText = resourcesArea.getText().trim();
+
+            if (title.isEmpty() || content.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Title and content cannot be empty!");
+                return;
+            }
+
+            lesson.setTitle(title);
+            lesson.setContent(content);
+
+            lesson.getResources().clear();
+            if (!resourcesText.isEmpty()) {
+                String[] resourcesArray = resourcesText.split("\\r?\\n");
+                for (String resource : resourcesArray) {
+                    if (!resource.trim().isEmpty()) {
+                        lesson.addResource(resource.trim());
+                    }
+                }
+            }
+
+            boolean success = dbManager.saveCourse(lessonCourse);
+            if (success) {
+                loadAllLessons();
+                JOptionPane.showMessageDialog(this, "Lesson updated successfully!");
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to update lesson.");
+            }
         }
     }
-}
     private void deleteLesson() {
         int selectedRow = lessonsTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -521,7 +1020,6 @@ public class InstructorDashboard extends JFrame {
             return;
         }
 
-       
         Course lessonCourse = findCourseByLesson(lessonId);
         if (lessonCourse == null) {
             JOptionPane.showMessageDialog(this, "Could not find the course for this lesson.");
@@ -529,8 +1027,8 @@ public class InstructorDashboard extends JFrame {
         }
 
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Are you sure you want to delete the lesson: " + lesson.getTitle() + "?",
-            "Confirm Delete", JOptionPane.YES_NO_OPTION);
+                "Are you sure you want to delete the lesson: " + lesson.getTitle() + "?",
+                "Confirm Delete", JOptionPane.YES_NO_OPTION);
 
         if (confirm == JOptionPane.YES_OPTION) {
             boolean success = instructorService.deleteLesson(lessonCourse.getCourseId(), lessonId);
@@ -544,7 +1042,6 @@ public class InstructorDashboard extends JFrame {
         }
     }
 
-   
     private List<Course> getInstructorCourses() {
         List<Course> instructorCourses = new ArrayList<>();
         Collection<Course> allCourses = dbManager.getAllCourses();
@@ -598,12 +1095,12 @@ public class InstructorDashboard extends JFrame {
         }
         return null;
     }
-    
+
     private void logout() {
-        int confirm = JOptionPane.showConfirmDialog(this, 
-            "Are you sure you want to logout?", "Confirm Logout", 
-            JOptionPane.YES_NO_OPTION);
-            
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Are you sure you want to logout?", "Confirm Logout",
+                JOptionPane.YES_NO_OPTION);
+
         if (confirm == JOptionPane.YES_OPTION) {
             new LoginFrame(new UserService(dbManager)).setVisible(true);
             dispose();

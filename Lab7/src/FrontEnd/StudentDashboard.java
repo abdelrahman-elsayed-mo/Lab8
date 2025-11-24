@@ -26,6 +26,7 @@ public class StudentDashboard extends javax.swing.JFrame {
     private Lessons LessonPanel;
     private LessonContent lessonContentPanel;
     private CourseService courseService;
+    private QuizPanel quizPanel;
 
     public StudentDashboard(JsonDatabaseManager dbManager, String studentId) {
         this.studentId = studentId;
@@ -202,6 +203,7 @@ public class StudentDashboard extends javax.swing.JFrame {
         EnrollCourse enrollCoursePanel = new EnrollCourse(dbManager, studentId, this);
         EnrolledCourses enrolledCoursesPanel = new EnrolledCourses(this);
         ////Lessons accessLessonPanel = new Lessons(this, courseService,studentService);
+         QuizPanel quizPanel = getQuizPanel();
 
        
         LessonContent lessonContentPanel = new LessonContent(this, courseService, studentService);
@@ -212,6 +214,7 @@ public class StudentDashboard extends javax.swing.JFrame {
         contentPanel.add(enrolledCoursesPanel, "enrolled");
       //  contentPanel.add(accessLessonPanel, "lessons");
         contentPanel.add(lessonContentPanel, "lessonContent");
+        contentPanel.add(quizPanel, "quiz");
 
         cardLayout.show(contentPanel, "available");
     }
@@ -305,8 +308,16 @@ public class StudentDashboard extends javax.swing.JFrame {
     
     public String getStudentId()
     {
-        return this.getStudentId();
+        return this.studentId;
     }
     
-
+  
+    public QuizPanel getQuizPanel() {
+    if (quizPanel == null) {
+        quizPanel = new QuizPanel(this);
+        contentPanel.add(quizPanel, "quiz");
+    }
+    return quizPanel;
+}
+    
 }

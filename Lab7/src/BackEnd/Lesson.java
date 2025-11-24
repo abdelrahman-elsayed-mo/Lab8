@@ -16,7 +16,8 @@ public class Lesson {
     private String title;
     private String content;
     private List<String> resources;
-    private Quiz quiz;
+    private String quizId;
+    private Quiz quiz; 
 
     public Lesson(String title, String content) {
         this.lessonId = new IdGenerator().generateLessonId();
@@ -58,10 +59,26 @@ public class Lesson {
         return quiz;
     }
 
+    public void setQuizId(String quizId) {
+         this.quiz = quiz;
+    if (quiz != null) {
+        this.quizId = quiz.getQuizID(); 
+    } else {
+        this.quizId = null;
+    }
+    }
+
     public void setQuiz(Quiz quiz) {
         this.quiz = quiz;
     }
-    
+
+    public String getQuizId() {
+        return quizId;
+    }
+
+ 
+
+
     public boolean containsQuiz(){
         if(this.quiz != null)
             return true;

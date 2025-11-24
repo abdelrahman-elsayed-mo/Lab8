@@ -52,7 +52,7 @@ public class Quiz {
               score++;
           }
       }
-      double S = (score*100)/questions.size();
+      double S = (score*100.0)/questions.size();
       return S;
     }
 

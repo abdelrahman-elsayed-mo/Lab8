@@ -1,0 +1,70 @@
+[
+  {
+    "attemptId": "A101051",
+    "studentId": "U46383",
+    "quizId": "Q53209",
+    "score": 50.0,
+    "answers": [
+      {
+        "question": {
+          "QuestionId": "qu100610",
+          "content": "is oop good?",
+          "correctAnswer": "yes",
+          "options": [
+            "yes",
+            "no",
+            "maybe"
+          ]
+        },
+        "studentAnswer": "no"
+      },
+      {
+        "question": {
+          "QuestionId": "qu101473",
+          "content": "is oop good for students?",
+          "correctAnswer": "yes",
+          "options": [
+            "yes",
+            "no",
+            "maybe"
+          ]
+        },
+        "studentAnswer": "yes"
+      }
+    ]
+  },
+  {
+    "attemptId": "A101369",
+    "studentId": "U46383",
+    "quizId": "Q53209",
+    "score": 100.0,
+    "answers": [
+      {
+        "question": {
+          "QuestionId": "qu100610",
+          "content": "is oop good?",
+          "correctAnswer": "yes",
+          "options": [
+            "yes",
+            "no",
+            "maybe"
+          ]
+        },
+        "studentAnswer": "yes"
+      },
+      {
+        "question": {
+          "QuestionId": "qu101473",
+          "content": "is oop good for students?",
+          "correctAnswer": "yes",
+          "options": [
+            "yes",
+            "no",
+            "maybe"
+          ]
+        },
+        "studentAnswer": "yes"
+      }
+    ]
+  }
+]

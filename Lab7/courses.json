@@ -1,51 +1,55 @@
 {
-  "C11876": {
-    "courseId": "C11876",
-    "title": "os",
-    "description": "operating system",
-    "instructorId": "U24315",
-    "lessons": [
-      {
-        "lessonId": "L45755",
-        "title": "windows",
-        "content": "windows is very good",
-        "resources": []
-      },
-      {
-        "lessonId": "L83415",
-        "title": "mac",
-        "content": "mac os is very good",
-        "resources": []
-      }
-    ],
-    "students": [],
-    "status": "REJECTED"
-  },
-  "C37218": {
-    "courseId": "C37218",
-    "title": "programming2",
+  "C85814": {
+    "courseId": "C85814",
+    "title": "prgramming2",
     "description": "java",
-    "instructorId": "U24315",
+    "instructorId": "U35166",
     "lessons": [
       {
-        "lessonId": "L57824",
+        "lessonId": "L11577",
         "title": "oop1",
-        "content": "inheritance",
-        "resources": [
-          "youtube"
-        ]
+        "content": "oop1",
+        "resources": [],
+        "quizId": "Q53209",
+        "quiz": {
+          "quizID": "Q53209",
+          "name": "oop",
+          "questions": [
+            {
+              "QuestionId": "qu100610",
+              "content": "is oop good?",
+              "correctAnswer": "yes",
+              "options": [
+                "yes",
+                "no",
+                "maybe"
+              ]
+            },
+            {
+              "QuestionId": "qu101473",
+              "content": "is oop good for students?",
+              "correctAnswer": "yes",
+              "options": [
+                "yes",
+                "no",
+                "maybe"
+              ]
+            }
+          ],
+          "maxAttempts": 3
+        }
       },
       {
-        "lessonId": "L54077",
-        "title": "opp2",
-        "content": "polymorphism is very good",
+        "lessonId": "L57042",
+        "title": "oop2",
+        "content": "oop2",
         "resources": [
           "facebook"
         ]
       }
     ],
     "students": [
-      "U91125"
+      "U46383"
     ],
     "status": "APPROVED"
   }

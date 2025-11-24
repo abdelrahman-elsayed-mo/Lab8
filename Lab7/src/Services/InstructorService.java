@@ -161,29 +161,49 @@ public class InstructorService {
         return allLessons;
     }
 
-    public boolean createQuiz(String instructorId, String courseId, String lessonId, String quizTitle, List<Question> questions) {
-        Course course = (Course) dbManager.getCourseById(courseId);
+    public boolean createQuiz( String courseId, String lessonId, String quizTitle, List<Question> questions) {
+         try {
+        Course course = dbManager.getCourseById(courseId);
         if (course == null) {
+            System.out.println("Course not found: " + courseId);
             return false;
         }
 
-        if (!course.getInstructorId().equals(instructorId)) {
+        if (!course.getInstructorId().equals(currentInstructor.getUserId())) {
+            System.out.println("Instructor doesn't own this course");
             return false;
         }
+
         Lesson lesson = course.getLessonById(lessonId);
         if (lesson == null) {
+            System.out.println("Lesson not found: " + lessonId);
+            return false;
+        }
+
+        // Check if quiz already exists
+        if (lesson.getQuiz() != null) {
+            System.out.println("Quiz already exists for this lesson");
             return false;
         }
 
         String quizId = new IdGenerator().generateQuizId();
-        Quiz Q = new Quiz(quizId, quizTitle, (ArrayList<Question>) questions);
-
-        lesson.setQuiz(Q);
-
-        dbManager.saveCourse(course);
-        dbManager.saveQuiz(Q);
-
-        return true;
+        Quiz quiz = new Quiz(quizId, quizTitle, new ArrayList<>(questions));
+        
+        // Set the quiz to the lesson
+        lesson.setQuiz(quiz);
+        
+        // Save both course and quiz
+        boolean courseSaved = dbManager.saveCourse(course);
+        boolean quizSaved = dbManager.saveQuiz(quiz);
+        
+        System.out.println("Quiz creation - Course saved: " + courseSaved + ", Quiz saved: " + quizSaved);
+        
+        return courseSaved && quizSaved;
+    } catch (Exception e) {
+        System.out.println("Error in createQuiz: " + e.getMessage());
+        e.printStackTrace();
+        return false;
+    }
     }
 
     public boolean editQuiz(String courseId, String lessonId, String quizId, String Title, List<Question> Questions) {
