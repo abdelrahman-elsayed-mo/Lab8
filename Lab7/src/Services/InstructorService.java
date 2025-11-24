@@ -1,23 +1,36 @@
-package Services;
+    package Services;
 
 import BackEnd.*;
 import BackEnd.Quiz;
 import Quiz.Question;
+import Quiz.QuizAttempt;
+import Quiz.StudentAnswer;
 import Utils.IdGenerator;
 import Utils.InputValidator;
 import databse.*;
-
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Map;
 
 public class InstructorService {
 
     private JsonDatabaseManager dbManager;
     private Instructor currentInstructor;
+    private CourseService courseService; 
+    private QuizService quizService; 
+    private UserService userService;
+    
 
-    public InstructorService(JsonDatabaseManager dbManager, User currentUser) {
+
+     public InstructorService(JsonDatabaseManager dbManager, User currentUser, CourseService courseService, QuizService quizService, UserService userService) {
         this.dbManager = dbManager;
+        this.courseService = courseService;
+        this.quizService = quizService;
+        this.userService = userService;
         if (currentUser instanceof Instructor) {
             this.currentInstructor = (Instructor) currentUser;
         } else {
@@ -162,48 +175,29 @@ public class InstructorService {
     }
 
     public boolean createQuiz( String courseId, String lessonId, String quizTitle, List<Question> questions) {
-         try {
-        Course course = dbManager.getCourseById(courseId);
+        Course course = (Course) dbManager.getCourseById(courseId);
+        String instructorId = this.currentInstructor.getUserId();
         if (course == null) {
-            System.out.println("Course not found: " + courseId);
             return false;
         }
 
-        if (!course.getInstructorId().equals(currentInstructor.getUserId())) {
-            System.out.println("Instructor doesn't own this course");
+        if (!course.getInstructorId().equals(instructorId)) {
             return false;
         }
-
         Lesson lesson = course.getLessonById(lessonId);
         if (lesson == null) {
-            System.out.println("Lesson not found: " + lessonId);
-            return false;
-        }
-
-        // Check if quiz already exists
-        if (lesson.getQuiz() != null) {
-            System.out.println("Quiz already exists for this lesson");
             return false;
         }
 
         String quizId = new IdGenerator().generateQuizId();
-        Quiz quiz = new Quiz(quizId, quizTitle, new ArrayList<>(questions));
-        
-        // Set the quiz to the lesson
-        lesson.setQuiz(quiz);
-        
-        // Save both course and quiz
-        boolean courseSaved = dbManager.saveCourse(course);
-        boolean quizSaved = dbManager.saveQuiz(quiz);
-        
-        System.out.println("Quiz creation - Course saved: " + courseSaved + ", Quiz saved: " + quizSaved);
-        
-        return courseSaved && quizSaved;
-    } catch (Exception e) {
-        System.out.println("Error in createQuiz: " + e.getMessage());
-        e.printStackTrace();
-        return false;
-    }
+        Quiz Q = new Quiz(quizId, quizTitle, (ArrayList<Question>) questions);
+
+        lesson.setQuiz(Q);
+
+        dbManager.saveCourse(course);
+        dbManager.saveQuiz(Q);
+
+        return true;
     }
 
     public boolean editQuiz(String courseId, String lessonId, String quizId, String Title, List<Question> Questions) {
@@ -374,5 +368,86 @@ public class InstructorService {
         }
         return false;
     }
+    public double calculateCourseAverageScore(String courseId) {
+    
+    List<QuizAttempt> allAttempts = quizService.getQuizAttemptsForCourse(courseId);
+    
+    if (allAttempts == null || allAttempts.isEmpty()) {
+        return 0.0;
+    }
+
+    double totalScoreSum = allAttempts.stream()
+            .mapToDouble(QuizAttempt::getScore) 
+            .sum();
+
+    return totalScoreSum / allAttempts.size();
+}
+    public Map<String, Double> getQuestionDifficulty(String courseId) {
+    List<StudentAnswer> allAnswers = quizService.getAllStudentAnswersForCourse(courseId);
+    
+    if (allAnswers == null || allAnswers.isEmpty()) {
+        return new HashMap<>();
+    }
+
+    Map<String, List<StudentAnswer>> answersByQuestion = allAnswers.stream()
+            .collect(Collectors.groupingBy(StudentAnswer::getQuestionId));
+
+    Map<String, Double> difficultyMap = new HashMap<>();
+    for (Map.Entry<String, List<StudentAnswer>> entry : answersByQuestion.entrySet()) {
+        String questionId = entry.getKey();
+        List<StudentAnswer> answers = entry.getValue();
+
+        long correctCount = answers.stream()
+                .filter(StudentAnswer::isCorrect)
+                .count();
+        
+        double difficultyPercentage = (double) correctCount / answers.size();
+        difficultyMap.put(questionId, difficultyPercentage * 100);
+    }
+    return difficultyMap;
+}
+    public Map<String, Double> getStudentPerformanceInCourse(String courseId) {
+    List<Student> students = viewEnrolledStudents(courseId);
+    Map<String, Double> performanceMap = new HashMap<>();
+
+    for (Student student : students) {
+        double avgScore = quizService.calculateStudentAverageScoreInCourse(student.getUserId(), courseId);
+        performanceMap.put(student.getUsername(), avgScore);
+    }
+    return performanceMap;
+}
+    public double calculateCourseAverageCompletion(String courseId) {
+    Course course = dbManager.getCourseById(courseId);
+    if (course == null || course.getStudents().isEmpty()) {
+        return 0.0;
+    }
+
+    int totalLessonsInCourse = course.getLessons().size();
+    if (totalLessonsInCourse == 0) {
+        return 0.0;
+    }
+
+    double totalCompletionPercentage = 0.0;
+    int studentCount = 0; 
+    for (String studentId : course.getStudents()) {
+        User user = dbManager.getUserById(studentId);
+        
+        if (user instanceof Student) {
+            Student student = (Student) user;
+            studentCount++; 
+            
+            List<String> completedLessons = student.getCompletedLessons(courseId); 
+            int completedCount = completedLessons.size();
+            
+            double studentCompletion = ((double) completedCount / totalLessonsInCourse) * 100;
+            totalCompletionPercentage += studentCompletion;
+        }
+    }
+
+    return (studentCount > 0) ? (totalCompletionPercentage / studentCount) : 0.0;
+}
+
 
 }
+
+    
